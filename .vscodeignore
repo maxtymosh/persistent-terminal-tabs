@@ -13,3 +13,9 @@ node_modules/**
 CHANGELOG.md.bak
 
 test/**
+
+group-project-plan.md
+release-notes.md
+install-prompt.md
+**/*.zip
+sha256sums.txt

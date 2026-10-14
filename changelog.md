@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+- Explain saved terminal groups, live tmux reattachment, reboot recovery, native Windows limits and optional AI recap usage in plain language.
+- Move the existing repository to maxtymosh and update extension metadata and download links.
+- Exclude internal planning and release handoff files from the installed extension. Runtime behavior is unchanged from 1.3.0.
+
 ## 1.3.0
 
 - Add Group now opens a searchable project-folder picker with named recent projects, full paths, workspace-folder discovery, folder browsing and editable saved names.
