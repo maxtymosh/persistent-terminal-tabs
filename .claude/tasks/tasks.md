@@ -2,9 +2,9 @@
 
 > Format: `- [ ] [P0|P1|P2|P3] [TASK-NNN] Action — why / relevant path (GOAL-NN)`.
 
-## Current mechanism — 1.2.3
+## Current mechanism — 1.3.2
 
-Blue follows the foreground Codex process's native OSC busy-title indicator.
+Blue follows the verified foreground Codex process's native OSC busy-title indicator, including shell-wrapped launches. Identity comes from the pane's process ancestry, TTY and foreground group; tmux's command name alone is insufficient.
 Terminal animation, typing, old transcript text and generic output changes are
 not work signals. Blue clears on the next poll (default 8 seconds), without a
 hold. Green means attached, yellow detached, and grey suspended. Other agents
@@ -64,7 +64,9 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
-No active execution work. Group projects shipped as 1.3.0; see TASK-015 under Done. The running window needs Developer: Reload Window to load the installed version.
+- [x] [P1] [TASK-016] Repair recurring Codex blue-dot failures — 1.3.2 verifies pane process ownership instead of requiring tmux to name Codex; 33 tests and isolated real tmux lifecycle pass. Installed JavaScript matches the tested build; loaded-version log and live working count verified. All 33 original pane-root PIDs survived reload. (GOAL-01)
+- [ ] [P2] Obtain requested Opus 5.5 review when the model responds — three attempts produced no review (one cancelled after >10 minutes, bounded retries timed out at 150 and 90 seconds). Implementation received local code review and regression checks; no Opus endorsement is claimed.
+- [ ] [P2] Finish visible reattachment after the verification reload if needed — 20 of 33 original sessions reattached; remaining 13 still alive/detached when native UI automation stopped reliably delivering keyboard/selection actions. No sessions killed/replaced. Current panel state, rather than stale title snapshots, owns subsequent reattachment.
 
 This established legacy planning store has no v3 config or enabled GitHub issue mirror. Continue it in place; do not bulk-migrate historical records as part of this feature.
 

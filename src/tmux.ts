@@ -1,3 +1,4 @@
+import { foregroundAgent, parseProcessSnapshot, PaneProcess } from './working-status';
 import { cachedCodexThread, matchCodexScreen } from './codex-history';
 import * as cp from 'child_process';
 import * as fs from 'fs';
@@ -358,7 +359,8 @@ export interface TmuxSessionInfo {
   name: string;     // full 'tt-xxxxxxxx'
   attached: boolean;
   command: string;  // foreground command in the active pane
-  title: string;    // agent-authored OSC title; read alongside the foreground command
+  title: string;    // agent-authored OSC title; read alongside verified process ownership
+  agentCommand?: string; // verified live foreground agent, including shell-wrapped launches
   ramMB: number;    // ~RSS of the pane pid's process subtree (0 if unknown)
   activitySec: number; // epoch seconds of the session's last activity (0 if unknown) — drives idle auto-suspend
 }
@@ -376,7 +378,7 @@ export function listSessions(): TmuxSessionInfo[] {
   // underscore-joined blob, split() never split, and every id became "1df558b7_0_3355_zsh_…" (the all-grey-dots
   // bug: has(id) false for every saved tab). A printable separator survives any locale; the UTF-8 env is belt
   // and suspenders so #{pane_current_command} etc. are never sanitized either.
-  const FMT = '#{session_name}|#{session_attached}|#{pane_pid}|#{pane_current_command}|#{session_activity}|#{pane_title}';
+  const FMT = '#{session_name}|#{session_attached}|#{pane_pid}|#{pane_current_command}|#{session_activity}|#{pane_tty}|#{pane_title}';
   const ENV = { ...process.env, LANG: process.env.LANG || 'en_US.UTF-8' };
   const probe = (sock: string[]): string | null => {
     try { return cp.execFileSync(tmux, [...sock, 'list-sessions', '-F', FMT], { encoding: 'utf8', env: ENV }); }
@@ -390,22 +392,23 @@ export function listSessions(): TmuxSessionInfo[] {
     if (alt !== null && alt.trim() !== '') raw = alt;
   }
   if (raw === null) return []; // no server / no sessions on any address
-  const rss = new Map<string, number>();
+  let processes = new Map<string, PaneProcess>();
   const kids = new Map<string, string[]>();
   try {
-    for (const ln of cp.execFileSync('ps', ['-Ao', 'pid=,ppid=,rss='], { encoding: 'utf8' }).split('\n')) {
-      const m = ln.trim().split(/\s+/);
-      if (m.length !== 3) continue;
-      rss.set(m[0], parseInt(m[2], 10) || 0);
-      const a = kids.get(m[1]); if (a) a.push(m[0]); else kids.set(m[1], [m[0]]);
+    processes = parseProcessSnapshot(cp.execFileSync('ps',
+      ['-axo', 'pid=,ppid=,pgid=,tpgid=,tty=,stat=,rss=,comm='],
+      { encoding: 'utf8', timeout: 2000, maxBuffer: 8 * 1024 * 1024 }));
+    for (const process of processes.values()) {
+      const a = kids.get(process.ppid);
+      if (a) a.push(process.pid); else kids.set(process.ppid, [process.pid]);
     }
-  } catch { /* RAM unavailable -> ramMB stays 0 */ }
+  } catch { /* unknown ownership -> no blue; attachment data still works */ }
   const subtreeKB = (pid: string): number => {
     let tot = 0; const seen = new Set<string>(); const stack = [pid];
     while (stack.length) {
       const x = stack.pop() as string;
       if (seen.has(x)) continue; seen.add(x);
-      tot += rss.get(x) ?? 0;
+      tot += processes.get(x)?.rssKB ?? 0;
       for (const k of kids.get(x) ?? []) stack.push(k);
     }
     return tot;
@@ -413,13 +416,14 @@ export function listSessions(): TmuxSessionInfo[] {
   const out: TmuxSessionInfo[] = [];
   for (const line of raw.split('\n')) {
     if (!line.startsWith('tt-')) continue;
-    const [name, attached, pid, command, activity, ...title] = line.split('|');
+    const [name, attached, pid, command, activity, tty, ...title] = line.split('|');
     out.push({
       id: name.slice(3),
       name,
       attached: Number(attached) > 0,
       command: command || '',
       title: title.join('|'),
+      agentCommand: foregroundAgent(pid, tty ?? '', processes, kids),
       ramMB: pid ? Math.round(subtreeKB(pid) / 1024) : 0,
       activitySec: parseInt(activity, 10) || 0,
     });

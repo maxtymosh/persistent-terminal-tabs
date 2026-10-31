@@ -75,7 +75,9 @@ function diagDots(when: string): void {
   // what aliveIds holds, what a FRESH listSessions returns, the first saved id + its slice, and a direct has().
   try {
     const cached = [...aliveIds].slice(0, 6).map((x) => JSON.stringify(x)).join(',');
-    const fresh = listSessions().slice(0, 6).map((s) => JSON.stringify(s.id)).join(',');
+    const snapshot = listSessions();
+    const fresh = snapshot.slice(0, 6).map((s) => JSON.stringify(s.id)).join(',');
+    diag(`  WORK@${when} ${snapshot.map(s => `${s.id}:${s.command}->${s.agentCommand ?? 'unverified'}:busyTitle=${isAgentWorking('codex', s.title)}`).join(' ')}`);
     const s0 = store.allIds()[0] ?? '';
     diag(`  DUMP@${when} aliveIds[0..6]=[${cached}] fresh[0..6]=[${fresh}] saved[0]=${JSON.stringify(s0)} sliced=${JSON.stringify(s0.slice(0, 8))} has(sliced)=${aliveIds.has(s0.slice(0, 8))}`);
   } catch (e) { diag(`  DUMP@${when} error: ${String(e)}`); }
@@ -186,7 +188,7 @@ function refreshAlive(): boolean {
   aliveIds = next;
 
   const nextWorking = new Set(workingCfg().on
-    ? sessions.filter(s => isAgentWorking(s.command, s.title)).map(s => s.id) : []);
+    ? sessions.filter(s => isAgentWorking(s.agentCommand ?? '', s.title)).map(s => s.id) : []);
   const workingChanged =
     nextWorking.size !== workingSet.size || [...nextWorking].some((x) => !workingSet.has(x));
   workingSet = nextWorking;
@@ -197,7 +199,7 @@ function refreshAlive(): boolean {
 
 /** User just interacted with the panel (clicked a tab/group, hit Refresh) — recompute the dots NOW instead of
  *  waiting up to `workingPollSeconds` for the next poll. Deferred a tick so the click itself stays snappy; the
- *  tmux sweep (one small capture-pane per live session) then runs and re-renders. */
+ *  tmux/process snapshot then runs and re-renders. */
 let pokePending = false;
 function pokeDots(): void {
   if (pokePending) return;
@@ -1466,9 +1468,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     bindLiveForeignSessions();
     log(`· startup: ${aliveIds.size} live tmux session(s) detected (0 here = empty at activate → catch-up re-polls)`);
     // Persist the host's real view so it can be read back after a reload (settles stale-build vs empty-listSessions).
-    diag(`activate managed=${managed} useTmux=${useTmux} saved=${store.allIds().length} live=${aliveIds.size} | ${tmuxDiag()}`);
+    diag(`activate version=${context.extension?.packageJSON?.version ?? 'unknown'} managed=${managed} useTmux=${useTmux} saved=${store.allIds().length} live=${aliveIds.size} | ${tmuxDiag()}`);
   } else {
-    diag(`activate managed=${managed} useTmux=${useTmux} saved=${store.allIds().length} (alive-tracking OFF: ${!managed ? 'unmanaged window' : 'tmux unavailable'})`);
+    diag(`activate version=${context.extension?.packageJSON?.version ?? 'unknown'} managed=${managed} useTmux=${useTmux} saved=${store.allIds().length} (alive-tracking OFF: ${!managed ? 'unmanaged window' : 'tmux unavailable'})`);
   }
 
   // Grace window: dispose untracked revivals (a default `zsh`) that surface right after startup.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2
+
+- Fix working Codex sessions staying green when tmux reports their launch shell as the foreground command. Verify the live agent using the pane's process ancestry, terminal and foreground process group.
+- Clear blue on completion, approval, process exit or unavailable process evidence. Stale titles, background processes and nested tools cannot establish work; no screen-change guesses or blue hold timer.
+- Keep attachment colors unchanged and include the loaded extension version in activation diagnostics.
+
 ## 1.3.1
 
 - Explain saved terminal groups, live tmux reattachment, reboot recovery, native Windows limits and optional AI recap usage in plain language.
