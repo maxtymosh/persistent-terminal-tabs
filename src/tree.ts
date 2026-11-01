@@ -128,7 +128,7 @@ export class TabsTree
     const open = this.isOpen(node.id);
     const detached = !open && this.sessionAlive(node.id);
     const working = (open || detached) && this.isWorking(node.id);
-    const state = working ? '🔵 Working — Codex reports an active turn'
+    const state = working ? '🔵 Working — agent reports active work'
       : open ? '🟢 Open — terminal attached'
       : detached ? '🟡 Detached — running in background; click to reattach'
       : '⚪ Suspended — no process; click to resume from transcript';

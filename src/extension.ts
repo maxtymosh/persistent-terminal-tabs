@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { StateStore, StateData, NEW_GROUP, SessionMeta, AgentKind, workspaceSlug, rememberCodexLink, rememberGrokLink, rememberAgyLink, agentDisplayName } from './state';
 import { TabsTree, Node, Arrange } from './tree';
-import { tmuxAvailable, tmuxLaunch, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessions, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
+import { tmuxAvailable, tmuxLaunch, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessions, attachedClientSessions, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
 import { friendlyProject, discoverSessions, transcriptCwd, transcriptCwds } from './sessions';
 import { recordHistory, readHistory, historyPath, HistoryEvent } from './history';
 import { generateRecap, Recap, RecapOptions, RecapSource, transcriptMtime, grokSessionIdFromFile, agySessionIdFromFile } from './recaps';
@@ -77,7 +77,7 @@ function diagDots(when: string): void {
     const cached = [...aliveIds].slice(0, 6).map((x) => JSON.stringify(x)).join(',');
     const snapshot = listSessions();
     const fresh = snapshot.slice(0, 6).map((s) => JSON.stringify(s.id)).join(',');
-    diag(`  WORK@${when} ${snapshot.map(s => `${s.id}:${s.command}->${s.agentCommand ?? 'unverified'}:busyTitle=${isAgentWorking('codex', s.title)}`).join(' ')}`);
+    diag(`  WORK@${when} ${snapshot.map(s => `${s.id}:${s.command}->${s.agentCommand ?? 'unverified'}:busyTitle=${isAgentWorking('codex', s.title)}:claude=${s.claudeStatus ?? 'unknown'}:working=${s.working}`).join(' ')}`);
     const s0 = store.allIds()[0] ?? '';
     diag(`  DUMP@${when} aliveIds[0..6]=[${cached}] fresh[0..6]=[${fresh}] saved[0]=${JSON.stringify(s0)} sliced=${JSON.stringify(s0.slice(0, 8))} has(sliced)=${aliveIds.has(s0.slice(0, 8))}`);
   } catch (e) { diag(`  DUMP@${when} error: ${String(e)}`); }
@@ -188,7 +188,7 @@ function refreshAlive(): boolean {
   aliveIds = next;
 
   const nextWorking = new Set(workingCfg().on
-    ? sessions.filter(s => isAgentWorking(s.agentCommand ?? '', s.title)).map(s => s.id) : []);
+    ? sessions.filter(s => s.working).map(s => s.id) : []);
   const workingChanged =
     nextWorking.size !== workingSet.size || [...nextWorking].some((x) => !workingSet.has(x));
   workingSet = nextWorking;
@@ -1465,6 +1465,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // survived the last quit show 🟡 detached, not ⚪). Cheap one-pass; kept fresh by actions + the catch-up below.
   if (managed && useTmux) {
     refreshAlive();
+    // Restart Extension Host keeps native terminals alive. Adopt only an exact
+    // verified tmux-client PID in this workspace; labels are not identities.
+    const clients = attachedClientSessions();
+    await Promise.all(vscode.window.terminals.map(async terminal => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const pid = await Promise.race([terminal.processId, new Promise<undefined>(resolve => {
+          timer = setTimeout(() => resolve(undefined), 500);
+        })]);
+        const shortId = pid === undefined ? undefined : clients.get(pid);
+        const matches = shortId ? store.allIds().filter(id => id.slice(0, 8) === shortId) : [];
+        if (matches.length === 1 && aliveIds.has(shortId!) && vscode.window.terminals.includes(terminal)) {
+          liveTerminals.set(terminal, matches[0]);
+        }
+      } catch { /* unavailable process identity cannot adopt a terminal */ }
+      finally { if (timer) clearTimeout(timer); }
+    }));
     bindLiveForeignSessions();
     log(`· startup: ${aliveIds.size} live tmux session(s) detected (0 here = empty at activate → catch-up re-polls)`);
     // Persist the host's real view so it can be read back after a reload (settles stale-build vs empty-listSessions).
@@ -1602,9 +1619,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // LAZY START. Opening 40+ Claude sessions at once loads every transcript into RAM simultaneously and
     // OOM-kills them — the exact crash Max hit. So past `autoOpenLimit` (or with openOnStartup off) we never
     // stampede: dispose revived ghosts, show the panel, and let each group/chat resume on demand when clicked.
-    for (const t of vscode.window.terminals) { liveTerminals.delete(t); t.dispose(); }
+    for (const t of vscode.window.terminals) { if (!liveTerminals.has(t)) t.dispose(); }
     if (store.allIds().length) {
-      log(`· lazy start — ${store.allIds().length} saved tab(s) shown; click a group/chat to open it (no stampede)`);
+      log(`· lazy start — ${store.allIds().length} saved tab(s), ${liveTerminals.size} existing terminal(s) retained; click a group/chat to open others (no stampede)`);
     }
   }
   tree.refresh();

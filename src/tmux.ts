@@ -1,4 +1,5 @@
-import { foregroundAgent, parseProcessSnapshot, PaneProcess } from './working-status';
+import { foregroundAgentDetails, isAgentWorking, parseProcessSnapshot, PaneProcess } from './working-status';
+import { claudeStatus, ClaudeStatus } from './claude-status';
 import { cachedCodexThread, matchCodexScreen } from './codex-history';
 import * as cp from 'child_process';
 import * as fs from 'fs';
@@ -361,6 +362,8 @@ export interface TmuxSessionInfo {
   command: string;  // foreground command in the active pane
   title: string;    // agent-authored OSC title; read alongside verified process ownership
   agentCommand?: string; // verified live foreground agent, including shell-wrapped launches
+  claudeStatus?: ClaudeStatus; // native process-bound lifecycle state, never inferred from its static title
+  working: boolean;
   ramMB: number;    // ~RSS of the pane pid's process subtree (0 if unknown)
   activitySec: number; // epoch seconds of the session's last activity (0 if unknown) — drives idle auto-suspend
 }
@@ -396,8 +399,8 @@ export function listSessions(): TmuxSessionInfo[] {
   const kids = new Map<string, string[]>();
   try {
     processes = parseProcessSnapshot(cp.execFileSync('ps',
-      ['-axo', 'pid=,ppid=,pgid=,tpgid=,tty=,stat=,rss=,comm='],
-      { encoding: 'utf8', timeout: 2000, maxBuffer: 8 * 1024 * 1024 }));
+      ['-axo', 'pid=,ppid=,pgid=,tpgid=,tty=,stat=,rss=,lstart=,comm='],
+      { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C', TZ: 'UTC' }, timeout: 2000, maxBuffer: 8 * 1024 * 1024 }));
     for (const process of processes.values()) {
       const a = kids.get(process.ppid);
       if (a) a.push(process.pid); else kids.set(process.ppid, [process.pid]);
@@ -417,18 +420,39 @@ export function listSessions(): TmuxSessionInfo[] {
   for (const line of raw.split('\n')) {
     if (!line.startsWith('tt-')) continue;
     const [name, attached, pid, command, activity, tty, ...title] = line.split('|');
+    const agent = foregroundAgentDetails(pid, tty ?? '', processes, kids);
+    const nativeStatus = agent?.name === 'claude' ? claudeStatus(agent.process, name) : undefined;
     out.push({
       id: name.slice(3),
       name,
       attached: Number(attached) > 0,
       command: command || '',
       title: title.join('|'),
-      agentCommand: foregroundAgent(pid, tty ?? '', processes, kids),
+      agentCommand: agent?.name,
+      claudeStatus: nativeStatus,
+      working: agent?.name === 'claude' ? nativeStatus === 'busy' : isAgentWorking(agent?.name ?? '', title.join('|')),
       ramMB: pid ? Math.round(subtreeKB(pid) / 1024) : 0,
       activitySec: parseInt(activity, 10) || 0,
     });
   }
   return out;
+}
+
+/** Exact live tmux client PID -> session, for adopting terminals after an
+ * extension-host restart without disposing the user's existing split layout. */
+export function attachedClientSessions(): Map<number, string> {
+  const result = new Map<number, string>();
+  const tmux = tmuxPath();
+  if (!tmux) return result;
+  try {
+    const raw = cp.execFileSync(tmux, [...socketArgs(), 'list-clients', '-F', '#{client_pid}|#{session_name}'],
+      { encoding: 'utf8', timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] });
+    for (const line of raw.split('\n')) {
+      const match = line.match(/^(\d+)\|tt-([a-zA-Z0-9-]+)$/);
+      if (match) result.set(Number(match[1]), match[2]);
+    }
+  } catch { /* no verified clients to adopt */ }
+  return result;
 }
 
 /** Visible pane text for conversation identity fallback; never used to infer work. */

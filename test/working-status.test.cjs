@@ -79,3 +79,16 @@ test('snapshot parsing preserves executable paths with spaces, ignores malformed
   assert.equal(owner(['4262 4263 4262 4262 ttys010 S+ 1 zsh',
     '4263 4262 4262 4262 ttys010 S+ 1 sh']), undefined);
 });
+
+test('Claude launchers resolve their native binary and retain process birth identity', () => {
+  const { foregroundAgentDetails } = require('../out/working-status');
+  const start = 'Sat Oct 31 04:01:24 2026';
+  const snapshot = parseProcessSnapshot(`${wrapper}\n47735 4262 4262 4262 ttys010 S+ 42 ${start} /Users/Test Person/claude/versions/2.1.314`);
+  const agent = foregroundAgentDetails('4262', '/dev/ttys010', snapshot);
+  assert.equal(agent.name, 'claude');
+  assert.equal(agent.process.pid, '47735');
+  assert.equal(agent.process.startTime, start);
+  assert.equal(agent.process.command, '/Users/Test Person/claude/versions/2.1.314');
+  const day = parseProcessSnapshot('1 0 1 1 pts/4 S 12 Mon Nov  2 01:02:03 2026 claude').get('1');
+  assert.equal(day.startTime, 'Mon Nov 2 01:02:03 2026');
+});

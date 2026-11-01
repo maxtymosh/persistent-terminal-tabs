@@ -2,7 +2,7 @@
   "name": "persistent-terminal-tabs",
   "displayName": "Persistent Terminal Tabs",
   "description": "Keep Claude and Codex terminal chats organized in saved groups. Reconnect to live sessions after reopening VS Code with tmux.",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "publisher": "maxtymosh",
   "author": "Max Tymoshyn",
   "license": "MIT",
@@ -177,7 +177,7 @@
         "terminalTabs.showWorkingDot": {
           "type": "boolean",
           "default": true,
-          "description": "Show blue when a verified foreground Codex process reports an active turn in its terminal title, including Codex launched beneath a shell. Idle animations, typing, output and old transcript text never trigger blue. Other agents retain attachment colors until a reliable work signal is supported."
+          "description": "Show blue when a verified foreground agent reports active work: Codex through its native busy title, Claude through its native busy/idle/waiting process record (including delegated work). No screen guesses or linger timer. Unsupported or unavailable signals retain attachment colors."
         },
         "terminalTabs.workingPollSeconds": {
           "type": "number",

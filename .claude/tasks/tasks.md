@@ -2,13 +2,12 @@
 
 > Format: `- [ ] [P0|P1|P2|P3] [TASK-NNN] Action — why / relevant path (GOAL-NN)`.
 
-## Current mechanism — 1.3.2
+## Current mechanism — 1.3.3
 
 Blue follows the verified foreground Codex process's native OSC busy-title indicator, including shell-wrapped launches. Identity comes from the pane's process ancestry, TTY and foreground group; tmux's command name alone is insufficient.
 Terminal animation, typing, old transcript text and generic output changes are
 not work signals. Blue clears on the next poll (default 8 seconds), without a
-hold. Green means attached, yellow detached, and grey suspended. Other agents
-retain attachment colors until a reliable work signal is implemented.
+hold. Claude uses its native busy/idle/waiting PID record, verified against the foreground process and UTC process birth; delegated work counts as busy. Green means attached, yellow detached, and grey suspended. Older Claude without native records, Grok and Antigravity retain attachment colors.
 
 Name/recap lookup reads modern Codex paginated history through read-only local
 app-server methods. Exact unique conversation names match full terminal titles,
@@ -64,9 +63,11 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
+- [x] [P1] [TASK-017] Add missing Claude work-state integration and activate 1.3.3 — 40 tests pass; installed JavaScript matches compiled output; loaded-version log confirms 1.3.3. Real Claude interruption clears native busy, and live Solutions Pages transitioned busy to idle. Lazy-start terminal retention is covered by an activation regression test; it does not preserve transient terminals through a full window reload. (GOAL-01)
+
 - [x] [P1] [TASK-016] Repair recurring Codex blue-dot failures — 1.3.2 verifies pane process ownership instead of requiring tmux to name Codex; 33 tests and isolated real tmux lifecycle pass. Installed JavaScript matches the tested build; loaded-version log and live working count verified. All 33 original pane-root PIDs survived reload. (GOAL-01)
-- [ ] [P2] Obtain requested Opus 5.5 review when the model responds — three attempts produced no review (one cancelled after >10 minutes, bounded retries timed out at 150 and 90 seconds). Implementation received local code review and regression checks; no Opus endorsement is claimed.
-- [ ] [P2] Finish visible reattachment after the verification reload if needed — 20 of 33 original sessions reattached; remaining 13 still alive/detached when native UI automation stopped reliably delivering keyboard/selection actions. No sessions killed/replaced. Current panel state, rather than stale title snapshots, owns subsequent reattachment.
+- [x] [P2] Obtain requested Opus 5.5 review — completed design and actual-code reviews on Nov 1 via claude-opus-5-5. No concrete blocker found. Checked its startup questions: foreign-session binding does not populate liveTerminals, tmuxLaunch uses tmux directly as shellPath, and the non-lazy path disposes/rebuilds rather than duplicating adopted terminals.
+- [x] [P2] Superseded: restore the old verification-reload attachment snapshot — by Nov 1 the user had continued working and the workspace had 36 live / 30 open sessions. Current panel state is authoritative; do not force the earlier 33-session attachment snapshot onto it.
 
 This established legacy planning store has no v3 config or enabled GitHub issue mirror. Continue it in place; do not bulk-migrate historical records as part of this feature.
 
@@ -82,9 +83,7 @@ This established legacy planning store has no v3 config or enabled GitHub issue 
 
 ## Someday — optional, outside the completed repair
 
-- [ ] [P3] [TASK-007] Precision upgrade — optional Claude `Stop` /
-      `UserPromptSubmit` hook writing `~/.terminal-tabs/activity/<id>` so the
-      blue state is exact for Claude (no screen-based fallback; Codex already uses its native work indicator) — needs a `~/.claude/settings.json` opt-in
+- [x] [P3] [TASK-007] Superseded by TASK-017: Claude native runtime status provides work, wait and idle state without mutating global hooks.
 - [ ] [P3] [TASK-008] Distinguish 🔵 working from a "⏸ needs you" state
       (permission prompt / plan approval) — currently a blocked prompt falls
       back to 🟢/🟡 once the prompt paints and the marker clears

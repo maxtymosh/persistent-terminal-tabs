@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.3
+
+- Add Claude working dots using its native busy/idle/waiting session registry, including delegated background work. A static Claude terminal title no longer hides active work.
+- Verify the foreground process, PID, UTC process start time, interactive kind and tmux session before accepting native status. Missing records, exited/reused processes, waiting prompts and idle sessions cannot keep blue latched.
+- Preserve Codex detection and attachment colors; no hooks, screen heuristics or timer-based guesses.
+
 ## 1.3.2
 
 - Fix working Codex sessions staying green when tmux reports their launch shell as the foreground command. Verify the live agent using the pane's process ancestry, terminal and foreground process group.

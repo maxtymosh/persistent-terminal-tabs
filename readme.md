@@ -78,7 +78,7 @@ By default, a closed tmux chat stays running. PTT may suspend a closed, idle, re
 | `terminalTabs.projectSearchRoots` | Additional folders for the project picker |
 | `terminalTabs.autoRecapOnOpen` | Refresh AI recaps when conversations grow |
 
-Dots show each chat's state: green means attached, yellow means running in the background, and grey means stopped or suspended. Blue means a foreground Codex process reports an active turn; other agents retain their attachment colors.
+Dots show each chat's state: green means attached, yellow means running in the background, and grey means stopped or suspended. Blue means a verified live Codex or Claude process reports active work. Claude includes its delegated background work and uses its native busy/idle/waiting state; waiting for your input returns to the attachment color. Older Claude versions without native status, Grok and Antigravity retain attachment colors. Status refreshes every eight seconds by default, with no blue hold timer.
 
 Layout and project history are stored locally under `~/.terminal-tabs/`. AI recaps use your existing agent CLI login and may consume usage or credits on your account. Set `terminalTabs.autoRecapOnOpen` to `false` to disable automatic recaps. The sparkle action generates a recap on request.
 
