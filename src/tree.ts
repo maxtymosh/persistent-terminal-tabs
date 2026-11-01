@@ -1,3 +1,4 @@
+import { AgentStatus } from './agent-status';
 import * as vscode from 'vscode';
 import { NEW_GROUP, StateStore, agentDisplayName } from './state';
 
@@ -72,6 +73,7 @@ export class TabsTree
     // agent reports an active turn -> the 🔵 working state (agent streaming /
     // thinking / running a tool). Overrides 🟢/🟡; implies a live process, so it can't apply to a ⚪ tab.
     private readonly isWorking: (id: string) => boolean = () => false,
+    private readonly agentStatus?: (id: string) => AgentStatus,
   ) {}
 
   private activeGroup: string | undefined;
@@ -128,18 +130,23 @@ export class TabsTree
     const open = this.isOpen(node.id);
     const detached = !open && this.sessionAlive(node.id);
     const working = (open || detached) && this.isWorking(node.id);
+    const status = (open || detached) ? this.agentStatus?.(node.id) : undefined;
+    const detail = status?.state === 'unknown' ? 'Work status unknown — no reliable signal'
+      : status?.state === 'waiting' ? 'Waiting for your input'
+      : status?.state === 'idle' ? 'Agent idle' : '';
     const state = working ? '🔵 Working — agent reports active work'
       : open ? '🟢 Open — terminal attached'
       : detached ? '🟡 Detached — running in background; click to reattach'
       : '⚪ Suspended — no process; click to resume from transcript';
     // Tooltip: state, then the AI recap (the searchable summary), then the folder. Press ✨ to (re)generate the recap.
     const tip = new vscode.MarkdownString(undefined, true);
-    tip.appendMarkdown(`**${meta?.title || node.id.slice(0, 8)}**\n\n${state}\n\n`);
+    tip.appendMarkdown(`**${meta?.title || node.id.slice(0, 8)}**\n\n${state}${detail ? `\n\n${detail}` : ''}\n\n`);
     tip.appendMarkdown(meta?.recap ? `${meta.recap}\n\n` : '_No recap yet — press ✨ to generate._\n\n');
     if (meta?.cwd) tip.appendMarkdown(`\`${meta.cwd}\``);
     item.tooltip = tip;
     item.iconPath = new vscode.ThemeIcon(
-      open || detached ? 'circle-filled' : 'circle-outline', // filled = a process is running (blue working / green attached / yellow detached)
+      open || detached ? (!working && status?.state === 'unknown' ? 'question'
+        : !working && status?.state === 'waiting' ? 'bell' : 'circle-filled') : 'circle-outline', // filled = a process is running (blue working / green attached / yellow detached)
       working ? new vscode.ThemeColor('charts.blue')
         : open ? new vscode.ThemeColor('charts.green')
         : detached ? new vscode.ThemeColor('charts.yellow')

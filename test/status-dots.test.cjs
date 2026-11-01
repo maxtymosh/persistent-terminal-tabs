@@ -81,3 +81,16 @@ test('activation retains verified attached terminals and paints native work tran
   `], { cwd: require('node:path').join(__dirname,'..'),encoding:'utf8',timeout:10000 });
   assert.equal(result.status,0,result.stderr || result.stdout);
 });
+
+
+test('unknown and waiting remain visibly distinct without changing attachment colors', () => {
+  let state='unknown',attached=true,alive=true;
+  const tree=new TabsTree({meta:()=>({title:'app'}),groups:[]},()=>attached,()=>{},()=>alive,()=>state==='working',()=>({state,source:'test'}));
+  const icon=()=>tree.getTreeItem({kind:'tab',id:'test',group:'group'}).iconPath;
+  assert.equal(icon().id,'question');assert.equal(icon().color.id,'charts.green');
+  attached=false;assert.equal(icon().id,'question');assert.equal(icon().color.id,'charts.yellow');
+  state='waiting';assert.equal(icon().id,'bell');assert.equal(icon().color.id,'charts.yellow');
+  state='idle';assert.equal(icon().id,'circle-filled');
+  state='working';assert.equal(icon().color.id,'charts.blue');
+  alive=false;assert.equal(icon().id,'circle-outline');assert.equal(icon().color,undefined);
+});

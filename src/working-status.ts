@@ -55,13 +55,14 @@ export function foregroundAgent(
 }
 
 export interface ForegroundAgent {
-  name: 'codex' | 'claude';
+  name: string;
   process: PaneProcess;
 }
 
 export function foregroundAgentDetails(
   panePid: string, paneTty: string, processes: Map<string, PaneProcess>,
   children?: Map<string, string[]>,
+  registered?: (process: PaneProcess) => string | undefined,
 ): ForegroundAgent | undefined {
   const tty = paneTty.replace(/^\/dev\//, '');
   const root = processes.get(panePid);
@@ -83,10 +84,12 @@ export function foregroundAgentDetails(
     const process = processes.get(pid);
     if (!process || process.tty !== tty) continue;
     const name = process.command.split(/[\\/]/).pop() ?? '';
+    const registration = registered?.(process);
     // Stop at the owning agent; its tool subprocesses cannot establish UI state.
-    if (/^(?:codex(?:\.exe)?|claude|grok|agy|\d+\.\d+\.\d+)$/i.test(name)) {
+    if (registration || /^(?:codex(?:\.exe)?|claude|grok|gemini|agy|\d+\.\d+\.\d+)$/i.test(name)) {
       const agent = /^codex(?:\.exe)?$/i.test(name) ? 'codex'
-        : /^(?:claude|\d+\.\d+\.\d+)$/i.test(name) ? 'claude' : undefined;
+        : /^(?:claude|\d+\.\d+\.\d+)$/i.test(name) ? 'claude'
+        : /^(?:grok|gemini|agy)$/i.test(name) ? name.toLowerCase() : registration;
       if (agent && process.pgid === root.tpgid &&
           process.tpgid === root.tpgid && !/[TZtX]/.test(process.state)) return { name: agent, process };
       continue;

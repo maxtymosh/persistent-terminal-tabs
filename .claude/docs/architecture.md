@@ -1,6 +1,6 @@
 # Persistent Terminal Tabs — architecture decisions
 
-> Updated: Oct 31, 2026
+> Updated: Nov 1, 2026
 
 ## Group projects
 
@@ -16,7 +16,18 @@
 
 [Repository tasks](../tasks/tasks.md) retain their established legacy format. New concrete work uses individual task records alongside the existing index. No v3 migration or GitHub issue sync is configured for this repository; historical tasks remain intact.
 
-## Working dots — 1.3.3
+## Shared agent status — 1.4.0
+
+- `[DECISION]` One application-independent engine returns working/waiting/idle/unknown with an evidence source. Models are not detector identities. Native adapters and the generic bridge feed the same polling/cache/tree path. Blue is working; question mark is unknown and bell is waiting, with green/yellow attachment colors preserved. Plain Codex titles now yield unknown because they do not explicitly prove idle.
+- `[INTEGRATION]` Gemini CLI 0.56.0 registers its actual Node process through a passive SessionStart hook; native dynamic title provides Ready, Working (including silent work) and Action Required. Real isolated tmux idle/work/cancellation/idle passed against a local fake provider. No inference or screen heuristic was used. Its AfterAgent hook is not authoritative because abort paths can skip it.
+- `[INTEGRATION]` The shared reporter binds schema, PID, UTC process birth, session, pane ancestry and foreground TTY/group. It writes bounded records atomically under a per-process nonce lock, rejects older event updates and preserves long quiet work without an expiry. Generic local-client working/waiting/idle/unknown/exit passed a real tmux fixture; `scripts/check-live-status.py` reproduces it.
+- `[DECISION]` Grok remains explicitly unknown. Source hooks and PID binding were implemented and tested, but real Grok 1.0.70 cancellation left both hooks and native turn status stale after the UI returned to its prompt. A temporary native status-line observer confirmed the same failure. The engine gates Grok rather than reintroducing known false blue; the test hook installed during research was removed with a local backup. No Grok status-line configuration ships.
+- The explicit `status-setup` command installs a stable, atomically switched generic reporter plus the named Gemini registration while preserving unrelated JSON settings and local backups. Gemini hooks load on normal agent restart; no user chat is killed. JSONC is refused rather than flattened. ACP is an integration source only when a client owns the connection; no universal passive interception is claimed.
+- Public integration contract and limits: [agent-status.md](../../docs/agent-status.md). Unsupported applications and model servers remain unknown until an application reports its own lifecycle.
+
+## Prior working-dot implementation — 1.3.3 (native Claude/Codex substrate)
+
+
 
 - `[DECISION]` Native Codex OSC busy title plus verified live process ownership determines blue. tmux's `pane_current_command` is diagnostic only for work detection: noninteractive zsh launch wrappers share a foreground process group with Codex, and tmux may select zsh. Do not regress to exact foreground-command equality, screen changes, activity timestamps, busy-text searches, or a linger timer.
 - One shared `ps` snapshot provides pid/parent, process group, terminal foreground group, TTY, process state, RSS and executable (`comm`, never argv). Resolve descendants of the pane root on that same TTY and foreground group, rejecting stopped/zombie processes. Stop traversal at an owning agent so nested tools cannot supply another UI's identity. Reuse this snapshot for the existing RAM totals.

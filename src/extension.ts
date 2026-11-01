@@ -1,4 +1,5 @@
 import { isAgentWorking } from './working-status';
+import { AgentStatus, UNKNOWN_STATUS } from './agent-status';
 import { configureCodexHistory, refreshCodexThreads } from './codex-history';
 import * as vscode from 'vscode';
 import { randomUUID } from 'crypto';
@@ -77,7 +78,7 @@ function diagDots(when: string): void {
     const cached = [...aliveIds].slice(0, 6).map((x) => JSON.stringify(x)).join(',');
     const snapshot = listSessions();
     const fresh = snapshot.slice(0, 6).map((s) => JSON.stringify(s.id)).join(',');
-    diag(`  WORK@${when} ${snapshot.map(s => `${s.id}:${s.command}->${s.agentCommand ?? 'unverified'}:busyTitle=${isAgentWorking('codex', s.title)}:claude=${s.claudeStatus ?? 'unknown'}:working=${s.working}`).join(' ')}`);
+    diag(`  WORK@${when} ${snapshot.map(s => `${s.id}:${s.command}->${s.agentCommand ?? 'unverified'}:busyTitle=${isAgentWorking('codex', s.title)}:claude=${s.claudeStatus ?? 'unknown'}:working=${s.working}:state=${s.status?.state}:source=${s.status?.source}`).join(' ')}`);
     const s0 = store.allIds()[0] ?? '';
     diag(`  DUMP@${when} aliveIds[0..6]=[${cached}] fresh[0..6]=[${fresh}] saved[0]=${JSON.stringify(s0)} sliced=${JSON.stringify(s0.slice(0, 8))} has(sliced)=${aliveIds.has(s0.slice(0, 8))}`);
   } catch (e) { diag(`  DUMP@${when} error: ${String(e)}`); }
@@ -158,6 +159,7 @@ let attachedIds = new Set<string>();
 
 /** Blue is a current agent-reported state, never inferred from changing terminal pixels. */
 let workingSet = new Set<string>();
+let agentStatuses = new Map<string, AgentStatus>();
 
 function workingCfg(): { on: boolean; pollMs: number } {
   return {
@@ -187,6 +189,9 @@ function refreshAlive(): boolean {
   const aliveChanged = next.size !== aliveIds.size || [...next].some((x) => !aliveIds.has(x));
   aliveIds = next;
 
+  const nextStatuses = new Map(sessions.map(s => [s.id, s.status ?? UNKNOWN_STATUS]));
+  const statusChanged = JSON.stringify([...nextStatuses]) !== JSON.stringify([...agentStatuses]);
+  agentStatuses = nextStatuses;
   const nextWorking = new Set(workingCfg().on
     ? sessions.filter(s => s.working).map(s => s.id) : []);
   const workingChanged =
@@ -194,7 +199,7 @@ function refreshAlive(): boolean {
   workingSet = nextWorking;
 
   updateStatus(); // keep the status-bar counter honest on every poll
-  return aliveChanged || workingChanged || attachedChanged;
+  return aliveChanged || workingChanged || attachedChanged || statusChanged;
 }
 
 /** User just interacted with the panel (clicked a tab/group, hit Refresh) — recompute the dots NOW instead of
@@ -1503,7 +1508,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       applyTabMove(a.movedIds); // surgical: touch only the moved pane(s) + the target's tail (R3/R4)
     }
     tree.refresh();
-  }, sessionAliveCached, isWorkingCached);
+  }, sessionAliveCached, isWorkingCached, id => agentStatuses.get(id.slice(0, 8)) ?? UNKNOWN_STATUS);
   view = vscode.window.createTreeView<Node>('terminalTabs.tree', {
     treeDataProvider: tree,
     dragAndDropController: tree,

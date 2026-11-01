@@ -2,12 +2,11 @@
 
 > Format: `- [ ] [P0|P1|P2|P3] [TASK-NNN] Action — why / relevant path (GOAL-NN)`.
 
-## Current mechanism — 1.3.3
+## Current mechanism — 1.4.0
 
-Blue follows the verified foreground Codex process's native OSC busy-title indicator, including shell-wrapped launches. Identity comes from the pane's process ancestry, TTY and foreground group; tmux's command name alone is insufficient.
-Terminal animation, typing, old transcript text and generic output changes are
-not work signals. Blue clears on the next poll (default 8 seconds), without a
-hold. Claude uses its native busy/idle/waiting PID record, verified against the foreground process and UTC process birth; delegated work counts as busy. Green means attached, yellow detached, and grey suspended. Older Claude without native records, Grok and Antigravity retain attachment colors.
+A shared engine resolves working, waiting, idle or unknown from the verified foreground application. Blue means working, a bell means waiting, and a question mark means unknown. Green means attached, yellow detached, and grey suspended. Process ancestry, TTY, foreground group and process birth bind evidence to the correct live application.
+
+Claude uses its native PID record; Codex uses native busy/approval titles; Gemini uses native dynamic titles after passive SessionStart registration. A reusable lifecycle reporter supports other clients, including local models. Grok remains deliberately unknown after failing real cancellation testing. Terminal animation, typing, transcript text, CPU and generic output changes are not work signals. No quiet-period hold is used. See docs/agent-status.md for setup and limits.
 
 Name/recap lookup reads modern Codex paginated history through read-only local
 app-server methods. Exact unique conversation names match full terminal titles,
@@ -63,6 +62,10 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
+- [x] [P1] [TASK-018] Build and install shared state engine, Gemini integration and reusable local-client bridge as 1.4.0 — 47 tests pass; live Gemini and generic lifecycle tests pass; installed JavaScript matches compiled output. (GOAL-01)
+- [ ] [P1] [TASK-020] Verify loaded 1.4.0 activation — package installed, but latest activation still reports 1.3.3. Native UI command entry was unreliable; do not reload the full window while user terminals are active. Use Developer: Restart Extension Host, then verify diag.log. (GOAL-01)
+- [ ] [P1] [TASK-019] Unblock Grok work-state integration — isolated actual 1.0.70 cancellation left both lifecycle hooks and native turn.started_at_ms stale after prompt return. Engine deliberately reports unknown. Require reliable cancellation/permission/idle lifecycle evidence before enabling; see docs/agent-status.md. (GOAL-01)
+
 - [x] [P1] [TASK-017] Add missing Claude work-state integration and activate 1.3.3 — 40 tests pass; installed JavaScript matches compiled output; loaded-version log confirms 1.3.3. Real Claude interruption clears native busy, and live Solutions Pages transitioned busy to idle. Lazy-start terminal retention is covered by an activation regression test; it does not preserve transient terminals through a full window reload. (GOAL-01)
 
 - [x] [P1] [TASK-016] Repair recurring Codex blue-dot failures — 1.3.2 verifies pane process ownership instead of requiring tmux to name Codex; 33 tests and isolated real tmux lifecycle pass. Installed JavaScript matches the tested build; loaded-version log and live working count verified. All 33 original pane-root PIDs survived reload. (GOAL-01)
@@ -84,9 +87,7 @@ This established legacy planning store has no v3 config or enabled GitHub issue 
 ## Someday — optional, outside the completed repair
 
 - [x] [P3] [TASK-007] Superseded by TASK-017: Claude native runtime status provides work, wait and idle state without mutating global hooks.
-- [ ] [P3] [TASK-008] Distinguish 🔵 working from a "⏸ needs you" state
-      (permission prompt / plan approval) — currently a blocked prompt falls
-      back to 🟢/🟡 once the prompt paints and the marker clears
+- [x] [P3] [TASK-008] Shared waiting state and bell icon added in 1.4.0 for verified native approval signals and the generic reporter.
 - [ ] [P3] [TASK-010] Verify a native Antigravity work-state signal before
       enabling blue for agy. Screen changes and busy-text guesses are retired.
 

@@ -1,5 +1,7 @@
-import { foregroundAgentDetails, isAgentWorking, parseProcessSnapshot, PaneProcess } from './working-status';
+import { foregroundAgentDetails, parseProcessSnapshot, PaneProcess } from './working-status';
 import { claudeStatus, ClaudeStatus } from './claude-status';
+import { AgentStatus, resolveAgentStatus } from './agent-status';
+import { readStatusRecord } from './status-record';
 import { cachedCodexThread, matchCodexScreen } from './codex-history';
 import * as cp from 'child_process';
 import * as fs from 'fs';
@@ -364,6 +366,7 @@ export interface TmuxSessionInfo {
   agentCommand?: string; // verified live foreground agent, including shell-wrapped launches
   claudeStatus?: ClaudeStatus; // native process-bound lifecycle state, never inferred from its static title
   working: boolean;
+  status: AgentStatus;
   ramMB: number;    // ~RSS of the pane pid's process subtree (0 if unknown)
   activitySec: number; // epoch seconds of the session's last activity (0 if unknown) — drives idle auto-suspend
 }
@@ -420,8 +423,11 @@ export function listSessions(): TmuxSessionInfo[] {
   for (const line of raw.split('\n')) {
     if (!line.startsWith('tt-')) continue;
     const [name, attached, pid, command, activity, tty, ...title] = line.split('|');
-    const agent = foregroundAgentDetails(pid, tty ?? '', processes, kids);
+    const agent = foregroundAgentDetails(pid, tty ?? '', processes, kids, process => readStatusRecord(process, name)?.application);
+    const record = agent && readStatusRecord(agent.process, name);
     const nativeStatus = agent?.name === 'claude' ? claudeStatus(agent.process, name) : undefined;
+    const status = resolveAgentStatus({ agent: agent?.name, owner: agent?.process, title: title.join('|'), claude: nativeStatus,
+      reported: record?.application === agent?.name && record ? { state: record.state, source: `${record.application}-bridge` } : undefined });
     out.push({
       id: name.slice(3),
       name,
@@ -430,7 +436,8 @@ export function listSessions(): TmuxSessionInfo[] {
       title: title.join('|'),
       agentCommand: agent?.name,
       claudeStatus: nativeStatus,
-      working: agent?.name === 'claude' ? nativeStatus === 'busy' : isAgentWorking(agent?.name ?? '', title.join('|')),
+      working: status.state === 'working',
+      status,
       ramMB: pid ? Math.round(subtreeKB(pid) / 1024) : 0,
       activitySec: parseInt(activity, 10) || 0,
     });

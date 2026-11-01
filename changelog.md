@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+- Unify work detection behind one working/waiting/idle/unknown state engine, independent of the selected cloud or local model.
+- Add Gemini native dynamic-title integration, and a reusable process-bound lifecycle reporter for other terminal apps.
+- Keep Grok explicitly unknown: real cancellation tests reproduced stale hook/native-turn state, so the adapter is gated rather than enabling false blue.
+- Show unknown work state with a question mark and input waits with a bell, preserving green/yellow attachment colors. Plain Codex titles now correctly mean unknown rather than confirmed idle.
+- Add an explicit passive-hook installer with configuration preservation/backups and an integration guide. Existing agent sessions must load their hooks normally; no live chats are restarted.
+
 ## 1.3.3
 
 - Add Claude working dots using its native busy/idle/waiting session registry, including delegated background work. A static Claude terminal title no longer hides active work.

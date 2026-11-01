@@ -1,5 +1,14 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 1, 2026 — shared status engine and adapter acceptance
+
+- Release 1.4.0 passes all 47 tests and is packaged/installed; installed JavaScript matches compiled output. The stable generic reporter and passive Gemini registration are installed. Loaded activation remains unverified (latest log: 1.3.3); native command entry was unreliable, and no full-window reload was forced. TASK-020 records the activation check.
+
+- Replaced application-specific dot decisions with a common working/waiting/idle/unknown engine and reusable process-bound lifecycle bridge. Unknown and waiting now have question/bell icons while attachment colors remain unchanged.
+- Added Gemini native-title integration through passive process registration. Actual Gemini 0.56.0 idle → working → cancellation → idle passed using an isolated tmux session and a local fake provider. Generic local-client work/wait/idle/unknown/exit passed the same engine; a repeatable fixture is saved in scripts/check-live-status.py.
+- Grok 1.0.70 failed cancellation acceptance even with native status-line observation: UI returned to prompt while native work state stayed active and no stop hook arrived. Gated Grok to unknown and removed this task's temporary global hook. No current-turn status-line setting was installed in the user's config. TASK-019 retains the exact remaining blocker.
+- Opus 5.5 reviewed the code. Addressed delayed-event ordering, process-start identity, lock ownership and reported-application binding. Preserved unrelated configuration and switched installed bridge runtimes atomically. The Grok failure was found by actual lifecycle testing after review, not hidden by passing unit tests.
+
 ## Nov 1, 2026 — Claude work-state repair verified
 
 - Completed 1.3.3 acceptance: 40 tests pass, packaged and installed JavaScript matches the compiled source, and the live activation log confirms version 1.3.3 loaded on Oct 31 at 19:02:52 UTC.

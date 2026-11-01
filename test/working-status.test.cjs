@@ -92,3 +92,12 @@ test('Claude launchers resolve their native binary and retain process birth iden
   const day = parseProcessSnapshot('1 0 1 1 pts/4 S 12 Mon Nov  2 01:02:03 2026 claude').get('1');
   assert.equal(day.startTime, 'Mon Nov 2 01:02:03 2026');
 });
+
+
+test('registered local clients resolve through wrappers, but background and nested apps cannot own the pane', () => {
+  const {parseProcessSnapshot,foregroundAgentDetails}=require('../out/working-status');
+  const ps=parseProcessSnapshot('10 1 10 20 ttys1 S 10 /bin/zsh\n20 10 20 20 ttys1 S+ 10 /usr/bin/python3\n30 20 20 20 ttys1 S+ 10 /usr/bin/node');
+  const registered=p=>p.pid==='20'?'my-local-client':p.pid==='30'?'gemini':undefined;
+  assert.equal(foregroundAgentDetails('10','/dev/ttys1',ps,undefined,registered).name,'my-local-client');
+  ps.get('20').pgid='99';assert.equal(foregroundAgentDetails('10','/dev/ttys1',ps,undefined,registered),undefined);
+});
