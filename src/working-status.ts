@@ -3,7 +3,7 @@
  * Require a verified foreground agent too: a shell can retain a departed agent's title.
  * Unknown agents/title formats deliberately stay at their attachment color.
  */
-const CODEX_BUSY_TITLE = /^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] /u;
+const CODEX_BUSY_TITLE = /^(?:● )?[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] /u;
 
 export function isAgentWorking(command: string, title: string): boolean {
   return /^codex(?:\.exe)?$/i.test(command) && CODEX_BUSY_TITLE.test(title);
@@ -11,7 +11,7 @@ export function isAgentWorking(command: string, title: string): boolean {
 
 /** Strip runtime decoration for exact conversation-name matching, never shorten names. */
 export function codexConversationTitle(title: string): string {
-  return title.replace(CODEX_BUSY_TITLE, '').replace(/^\[ ! \] Action Required \| /, '');
+  return title.replace(CODEX_BUSY_TITLE, '').replace(/^(?:● )?\[ [!.] \] Action Required \| /, '');
 }
 
 /** One shared OS snapshot supplies both process ownership and the existing RAM tally.

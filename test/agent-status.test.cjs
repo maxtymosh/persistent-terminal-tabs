@@ -58,3 +58,22 @@ test('Grok native microsecond process birth rejects a registry PID reused by ano
  assert.equal(grokBirthMatches(stamp-1000000,owner),false);
  assert.equal(grokBirthMatches(undefined,owner),false);
 });
+
+// Native default titles captured from the reported Upwork sessions.
+test('Codex clears busy to native idle and recognizes both approval blink phases',()=>{
+ const get=title=>resolveAgentStatus({agent:'codex',title,owner}).state;
+ for(const name of ['Connect to Zhenia account','Continue Upwork handoff','Send all written proposals']) {
+  const title=name+' | maxtymosh';
+  assert.equal(get('⠋ '+title),'working');
+  assert.equal(get('[ ! ] Action Required | '+title),'waiting');
+  assert.equal(get('[ . ] Action Required | '+title),'waiting');
+  assert.equal(get(title),'idle');
+  assert.equal(get('⠹ '+title),'working');
+  assert.equal(get(title),'idle');
+ }
+ assert.equal(get('● ⠹ task | project'),'working');
+ for(const label of ['Working','Thinking','Waiting']) assert.equal(get(label+' | task | project'),'working');
+ assert.equal(get('Ready | task | project'),'idle');
+ for(const title of ['', 'shell title', 'Starting | project', '● task | project'])assert.equal(get(title),'unknown');
+ assert.equal(resolveAgentStatus({agent:'codex',title:'task | project'}).state,'unknown');
+});

@@ -4,14 +4,14 @@ One engine accepts `working`, `waiting`, `idle`, or `unknown`. The integration b
 
 ## Visible states
 
-Blue means verified working. The bell means waiting for input. A question mark means the work state is unknown; it never means idle. Green still means attached and yellow detached, including on question marks and bells. A grey outline means no live tmux session. `showWorkingDot` controls blue; status details remain available in tooltips.
+Blue means verified working. The bell means waiting for input. A filled grey circle means the work state is unknown; it never means idle. Green means attached and yellow detached for known idle/waiting states. Unknown attachment details remain in the tooltip. A grey outline means no live tmux session. `showWorkingDot` controls blue; status details remain available in tooltips.
 
 ## Built-in evidence
 
 | Application | Source | Limits |
 | --- | --- | --- |
 | Claude Code | Native PID registry | Requires registry support; includes native delegated-work state. |
-| Codex | Native OSC spinner / action-required title | A plain title clears blue but cannot prove idle, so becomes unknown. |
+| Codex | Native OSC activity / action-required / thread-project title | Recognizes idle in the default title layout, both approval blink phases, and explicit run-state titles. Requires activity/spinner with animations enabled, or explicit run-state; removing all work indicators makes title-based detection unreliable. Empty/unrecognized titles remain unknown. |
 | Gemini CLI | Native dynamic OSC title, registered by a passive SessionStart hook | Requires dynamic titles and hook registration. Includes silent work, waiting and ready; disabled titles yield unknown. |
 | Grok Build | Gated: unknown | Real Grok 1.0.70 cancellation retained native turn state and omitted the stop hook. Hook mappings remain testable, but the engine rejects them until cancellation passes. |
 | Other agents / local clients | Shared lifecycle reporter | The client must report explicit transitions; unsupported apps stay unknown. |
@@ -53,6 +53,8 @@ The stored v1 JSON contract is implemented in `src/status-record.ts`. Third-part
 ACP can supply turn start, permissions and completion through a client that owns the ACP connection. PTT does not own that connection for existing interactive terminals, so this release does not claim universal passive ACP interception. An ACP client can translate its own events into the reporter above.
 
 ## Verified source contracts
+
+- [Codex 0.166.0 title renderer](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/tui/src/chatwidget/status_surfaces.rs): default activity vanishes while idle; approval alternates `[ ! ]` and `[ . ]`; explicit run-state reports Ready/Working/Thinking/Waiting. Reproduced all three reported Upwork panes as idle prompts with normal native titles. The 1.4.0 blanket unknown classification was a regression, not a stopped refresh timer.
 
 - [Gemini hooks](https://geminicli.com/docs/hooks/reference/), plus locally installed Gemini CLI 0.56.0 `computeTerminalTitle` and cancellation paths.
 - [Grok hooks](https://docs.x.ai/build/features/hooks), plus Grok Build 1.0.41 embedded hook reference; actual interactive launcher ran 1.0.70 during isolated cancellation checks. Its native `pid_start` is epoch microseconds on macOS. The check found live PID binding works but cancellation state is unreliable.

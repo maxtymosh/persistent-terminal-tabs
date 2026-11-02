@@ -1,6 +1,6 @@
 # Persistent Terminal Tabs — architecture decisions
 
-> Updated: Nov 1, 2026
+> Updated: Nov 2, 2026
 
 ## Group projects
 
@@ -18,7 +18,7 @@
 
 ## Shared agent status — 1.4.0
 
-- `[DECISION]` One application-independent engine returns working/waiting/idle/unknown with an evidence source. Models are not detector identities. Native adapters and the generic bridge feed the same polling/cache/tree path. Blue is working; question mark is unknown and bell is waiting, with green/yellow attachment colors preserved. Plain Codex titles now yield unknown because they do not explicitly prove idle.
+- `[DECISION]` One application-independent engine returns working/waiting/idle/unknown with an evidence source. Models are not detector identities. Native adapters and the generic bridge feed the same polling/cache/tree path. Blue is working; filled grey is unknown and bell is waiting. Known idle/waiting keep green/yellow attachment colors; unknown attachment remains in the tooltip. Supersedes the 1.4.0 question icon and blanket plain-title unknown decision: native Codex thread/project idle titles must clear unknown. Empty/unrecognized formats remain unknown. Codex title detection assumes default animated activity or explicit run-state; customized titles that remove state cannot provide reliable work evidence. Both approval blink phases are recognized.
 - `[INTEGRATION]` Gemini CLI 0.56.0 registers its actual Node process through a passive SessionStart hook; native dynamic title provides Ready, Working (including silent work) and Action Required. Real isolated tmux idle/work/cancellation/idle passed against a local fake provider. No inference or screen heuristic was used. Its AfterAgent hook is not authoritative because abort paths can skip it.
 - `[INTEGRATION]` The shared reporter binds schema, PID, UTC process birth, session, pane ancestry and foreground TTY/group. It writes bounded records atomically under a per-process nonce lock, rejects older event updates and preserves long quiet work without an expiry. Generic local-client working/waiting/idle/unknown/exit passed a real tmux fixture; `scripts/check-live-status.py` reproduces it.
 - `[DECISION]` Grok remains explicitly unknown. Source hooks and PID binding were implemented and tested, but real Grok 1.0.70 cancellation left both hooks and native turn status stale after the UI returned to its prompt. A temporary native status-line observer confirmed the same failure. The engine gates Grok rather than reintroducing known false blue; the test hook installed during research was removed with a local backup. No Grok status-line configuration ships.

@@ -51,8 +51,11 @@ test('tmux snapshot integrates foreground ownership without changing attachment,
     assert.equal(sample().busy, true, 'detached Codex can still work');
     title = 'Work | host';
     assert.equal(sample().busy, false, 'completion restores attachment color');
+    assert.equal(sample().s.status.state, 'idle', 'native idle must not stay unknown');
     title = '[ ! ] Action Required | Work | host';
     assert.equal(sample().busy, false);
+    title = '[ . ] Action Required | Work | host';
+    assert.equal(sample().s.status.state, 'waiting');
     title = '⠋ Work | host';
     gone = true;
     assert.equal(sample().busy, false, 'stale title after exit');

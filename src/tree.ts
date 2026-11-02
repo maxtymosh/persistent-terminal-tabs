@@ -145,9 +145,9 @@ export class TabsTree
     if (meta?.cwd) tip.appendMarkdown(`\`${meta.cwd}\``);
     item.tooltip = tip;
     item.iconPath = new vscode.ThemeIcon(
-      open || detached ? (!working && status?.state === 'unknown' ? 'question'
-        : !working && status?.state === 'waiting' ? 'bell' : 'circle-filled') : 'circle-outline', // filled = a process is running (blue working / green attached / yellow detached)
+      open || detached ? (!working && status?.state === 'waiting' ? 'bell' : 'circle-filled') : 'circle-outline', // filled = a process is running (blue working / green attached / yellow detached)
       working ? new vscode.ThemeColor('charts.blue')
+        : status?.state === 'unknown' ? new vscode.ThemeColor('descriptionForeground')
         : open ? new vscode.ThemeColor('charts.green')
         : detached ? new vscode.ThemeColor('charts.yellow')
         : undefined,

@@ -2,9 +2,9 @@
 
 > Format: `- [ ] [P0|P1|P2|P3] [TASK-NNN] Action — why / relevant path (GOAL-NN)`.
 
-## Current mechanism — 1.4.0
+## Current mechanism — 1.4.1
 
-A shared engine resolves working, waiting, idle or unknown from the verified foreground application. Blue means working, a bell means waiting, and a question mark means unknown. Green means attached, yellow detached, and grey suspended. Process ancestry, TTY, foreground group and process birth bind evidence to the correct live application.
+A shared engine resolves working, waiting, idle or unknown from the verified foreground application. Blue means working, a bell means waiting, and a filled grey circle means unknown. Green means attached and yellow detached for known idle/waiting; hollow grey means suspended. Codex native thread/project titles now resolve idle instead of remaining unknown; missing/unrecognized titles stay unknown. Process ancestry, TTY, foreground group and process birth bind evidence to the correct live application.
 
 Claude uses its native PID record; Codex uses native busy/approval titles; Gemini uses native dynamic titles after passive SessionStart registration. A reusable lifecycle reporter supports other clients, including local models. Grok remains deliberately unknown after failing real cancellation testing. Terminal animation, typing, transcript text, CPU and generic output changes are not work signals. No quiet-period hold is used. See docs/agent-status.md for setup and limits.
 
@@ -62,8 +62,10 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
+- [ ] [P1] [TASK-021] Verify loaded 1.4.1 activation — false unknown Codex idle fix and filled grey unknown circles are implemented/installed; 48 tests pass and all three reported Upwork panes resolve idle. Installed JavaScript matches tested output. Native UI activation could not be completed (command palette did not open; coordinate action returned noWindowsAvailable); latest activation is 1.4.0. Use Developer: Restart Extension Host and verify diag.log. (GOAL-01)
+
 - [x] [P1] [TASK-018] Build and install shared state engine, Gemini integration and reusable local-client bridge as 1.4.0 — 47 tests pass; live Gemini and generic lifecycle tests pass; installed JavaScript matches compiled output. (GOAL-01)
-- [ ] [P1] [TASK-020] Verify loaded 1.4.0 activation — package installed, but latest activation still reports 1.3.3. Native UI command entry was unreliable; do not reload the full window while user terminals are active. Use Developer: Restart Extension Host, then verify diag.log. (GOAL-01)
+- [x] [P1] [TASK-020] Verify loaded 1.4.0 activation — confirmed in diag.log on Nov 2 at 18:45:22 UTC. (GOAL-01)
 - [ ] [P1] [TASK-019] Unblock Grok work-state integration — isolated actual 1.0.70 cancellation left both lifecycle hooks and native turn.started_at_ms stale after prompt return. Engine deliberately reports unknown. Require reliable cancellation/permission/idle lifecycle evidence before enabling; see docs/agent-status.md. (GOAL-01)
 
 - [x] [P1] [TASK-017] Add missing Claude work-state integration and activate 1.3.3 — 40 tests pass; installed JavaScript matches compiled output; loaded-version log confirms 1.3.3. Real Claude interruption clears native busy, and live Solutions Pages transitioned busy to idle. Lazy-start terminal retention is covered by an activation regression test; it does not preserve transient terminals through a full window reload. (GOAL-01)

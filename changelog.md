@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1 — November 2, 2026
+
+- Fixed Codex idle sessions staying unknown: recognize native thread/project and Ready titles after work finishes.
+- Recognize both blinking approval-title phases and microphone-prefixed busy titles.
+- Show unknown as a filled grey circle; stopped sessions retain the hollow circle. Keep attachment details in tooltips.
+- Added repeated lifecycle and already-open-tab click-refresh regression coverage; 48 tests pass.
+
 ## 1.4.0
 
 - Unify work detection behind one working/waiting/idle/unknown state engine, independent of the selected cloud or local model.

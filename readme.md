@@ -78,7 +78,7 @@ By default, a closed tmux chat stays running. PTT may suspend a closed, idle, re
 | `terminalTabs.projectSearchRoots` | Additional folders for the project picker |
 | `terminalTabs.autoRecapOnOpen` | Refresh AI recaps when conversations grow |
 
-Blue means verified working. Green means attached, yellow detached, and a grey outline stopped or suspended. A bell means waiting for your input; a question mark means the work state is unknown, not idle. Attachment colors remain green/yellow on those icons. Status refreshes every eight seconds by default.
+Blue means verified working. Green means attached, yellow detached, and a grey outline stopped or suspended. A bell means waiting for your input; a filled grey circle means the work state is unknown, not idle. Waiting icons retain green/yellow attachment colors; unknown attachment details are in the tooltip. Status refreshes every eight seconds by default.
 
 One status engine supports Claude and Codex natively, Gemini CLI through its dynamic title plus registration, while Grok currently stays unknown because its native cancellation signals failed verification. Any other terminal application—including a client using local models—can report the same states through the shared bridge. Unsupported apps remain unknown; CPU usage and screen changes are never treated as proof of work. See [agent status setup and integration](docs/agent-status.md).
 

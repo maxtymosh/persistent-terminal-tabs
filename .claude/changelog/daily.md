@@ -1,5 +1,12 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 2, 2026 — unknown dots and Codex idle regression
+
+- Fixed the 1.4.0 regression that classified ordinary Codex thread/project titles as unknown forever. All three reported Upwork sessions were verified at idle prompts; the corrected live detector resolves idle. Click refresh was already wired; a new activation test verifies the already-open early-return path refreshes immediately.
+- `[DECISION]` Unknown now uses a filled grey circle, with attachment details in the tooltip; stopped remains hollow. Recognize both native approval blink phases, microphone-prefixed work and explicit run-state titles.
+- 48 tests pass, including click refresh isolated from startup catch-ups. Packaged and installed 1.4.1; installed JavaScript matches compiled output. Source reviewed against Codex 0.166.0 native title renderer. Existing Claude, Gemini, generic bridge and Grok quarantine retained.
+- Activation remains pending: native UI command entry did not open the palette and a coordinate action returned noWindowsAvailable. Last activation is 1.4.0; no full-window reload or live chat restart was forced. TASK-021 records the remaining check.
+
 ## Nov 1, 2026 — shared status engine and adapter acceptance
 
 - Release 1.4.0 passes all 47 tests and is packaged/installed; installed JavaScript matches compiled output. The stable generic reporter and passive Gemini registration are installed. Loaded activation remains unverified (latest log: 1.3.3); native command entry was unreliable, and no full-window reload was forced. TASK-020 records the activation check.

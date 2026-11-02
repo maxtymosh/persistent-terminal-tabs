@@ -39,13 +39,13 @@ test('activation retains verified attached terminals and paints native work tran
     const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),Module=require('node:module');
     const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ptt-activation-'));
     os.homedir=()=>tmp;
-    global.setTimeout=()=>0; global.setInterval=()=>0;
+    const pending=[]; global.setTimeout=fn=>{pending.push(fn);return 0}; global.setInterval=()=>0;
     const {StateStore,workspaceStatePath}=require('./out/state');
     const ids=['live0001-session','idle0002-session',...Array.from({length:8},(_,i)=>'cold000'+i+'-session')];
     const store=new StateStore(workspaceStatePath(tmp),tmp,{groups:[{name:'Test',sessionIds:ids}],sessions:Object.fromEntries(ids.map(id=>[id,{title:id,cwd:tmp,agent:'claude'}]))});
     store.save();
     let destroyed=0,launched=0,provider,working=true,attached=true;
-    const terminals=[{name:'Claude',processId:Promise.resolve(500),dispose(){destroyed++}},
+    const terminals=[{name:'Claude',show(){},exitStatus:undefined,processId:Promise.resolve(500),dispose(){destroyed++}},
       {name:'Claude stale duplicate',processId:Promise.resolve(999),dispose(){destroyed++}}];
     const handlers=new Map(),d={dispose(){}};
     const vscode={extensions:{getExtension:()=>undefined},EventEmitter:class{event=()=>d;fire(){}},
@@ -58,8 +58,8 @@ test('activation retains verified attached terminals and paints native work tran
         createTreeView:(id,opts)=>{provider=opts.treeDataProvider;return{selection:[],onDidChangeSelection:()=>d}},
         registerFileDecorationProvider:()=>d,onDidOpenTerminal:()=>d,onDidCloseTerminal:()=>d,
         showInformationMessage(){},createTerminal(){launched++;throw Error('must not launch')}}};
-    const snapshot=()=>[{id:'live0001',name:'tt-live0001',attached,working,command:'claude',title:'✳ static',agentCommand:'claude',claudeStatus:working?'busy':'idle',ramMB:1,activitySec:1},
-      {id:'idle0002',name:'tt-idle0002',attached:false,working:false,command:'claude',title:'✳ static',ramMB:1,activitySec:1}];
+    const snapshot=()=>[{id:'live0001',name:'tt-live0001',attached,working,command:'claude',title:'✳ static',agentCommand:'claude',claudeStatus:working?'busy':'idle',status:{state:working?'working':'idle',source:'test'},ramMB:1,activitySec:1},
+      {id:'idle0002',name:'tt-idle0002',attached:false,working:false,status:{state:'idle',source:'test'},command:'claude',title:'✳ static',ramMB:1,activitySec:1}];
     const real=Module._load;
     Module._load=function(name,...args){
       if(name==='vscode')return vscode;
@@ -73,7 +73,10 @@ test('activation retains verified attached terminals and paints native work tran
       assert.equal(destroyed,1,'only unverified stray is disposed');assert.equal(launched,0,'no cold or detached session is launched');
       const color=id=>provider.getTreeItem({kind:'tab',id,group:'Test'}).iconPath.color?.id;
       assert.equal(color(ids[0]),'charts.blue');
-      working=false;handlers.get('terminalTabs.diagDots')();assert.equal(color(ids[0]),'charts.green');
+      while(pending.length)pending.shift()(); // drain startup catch-ups before testing the click
+      working=false;handlers.get('terminalTabs.openTab')({kind:'tab',id:ids[0],group:'Test'});
+      while(pending.length)pending.shift()();
+      assert.equal(color(ids[0]),'charts.green','clicking an already open tab refreshes state');
       assert.equal(color(ids[1]),'charts.yellow');
       working=true;handlers.get('terminalTabs.diagDots')();assert.equal(color(ids[0]),'charts.blue');
       ext.deactivate();
@@ -83,12 +86,12 @@ test('activation retains verified attached terminals and paints native work tran
 });
 
 
-test('unknown and waiting remain visibly distinct without changing attachment colors', () => {
+test('unknown is filled grey; idle and waiting retain attachment colors', () => {
   let state='unknown',attached=true,alive=true;
   const tree=new TabsTree({meta:()=>({title:'app'}),groups:[]},()=>attached,()=>{},()=>alive,()=>state==='working',()=>({state,source:'test'}));
   const icon=()=>tree.getTreeItem({kind:'tab',id:'test',group:'group'}).iconPath;
-  assert.equal(icon().id,'question');assert.equal(icon().color.id,'charts.green');
-  attached=false;assert.equal(icon().id,'question');assert.equal(icon().color.id,'charts.yellow');
+  assert.equal(icon().id,'circle-filled');assert.equal(icon().color.id,'descriptionForeground');
+  attached=false;assert.equal(icon().id,'circle-filled');assert.equal(icon().color.id,'descriptionForeground');
   state='waiting';assert.equal(icon().id,'bell');assert.equal(icon().color.id,'charts.yellow');
   state='idle';assert.equal(icon().id,'circle-filled');
   state='working';assert.equal(icon().color.id,'charts.blue');
