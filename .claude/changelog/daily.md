@@ -5,7 +5,7 @@
 - Fixed the 1.4.0 regression that classified ordinary Codex thread/project titles as unknown forever. All three reported Upwork sessions were verified at idle prompts; the corrected live detector resolves idle. Click refresh was already wired; a new activation test verifies the already-open early-return path refreshes immediately.
 - `[DECISION]` Unknown now uses a filled grey circle, with attachment details in the tooltip; stopped remains hollow. Recognize both native approval blink phases, microphone-prefixed work and explicit run-state titles.
 - 48 tests pass, including click refresh isolated from startup catch-ups. Packaged and installed 1.4.1; installed JavaScript matches compiled output. Source reviewed against Codex 0.166.0 native title renderer. Existing Claude, Gemini, generic bridge and Grok quarantine retained.
-- Activation remains pending: native UI command entry did not open the palette and a coordinate action returned noWindowsAvailable. Last activation is 1.4.0; no full-window reload or live chat restart was forced. TASK-021 records the remaining check.
+- Activated and verified 1.4.1 using the Extensions view’s Restart Extensions button. Log confirms 2026-11-03 04:45:25 UTC (Nov 2 local); refreshed panel has no question-mark icons and retains 19 live / 19 open sessions. Earlier palette attempts failed, but the dedicated restart action succeeded. TASK-021 closed.
 
 ## Nov 1, 2026 — shared status engine and adapter acceptance
 

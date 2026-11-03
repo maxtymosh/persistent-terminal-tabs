@@ -62,7 +62,7 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
-- [ ] [P1] [TASK-021] Verify loaded 1.4.1 activation — false unknown Codex idle fix and filled grey unknown circles are implemented/installed; 48 tests pass and all three reported Upwork panes resolve idle. Installed JavaScript matches tested output. Native UI activation could not be completed (command palette did not open; coordinate action returned noWindowsAvailable); latest activation is 1.4.0. Use Developer: Restart Extension Host and verify diag.log. (GOAL-01)
+- [x] [P1] [TASK-021] Correct false unknown Codex idle status and activate 1.4.1 — 48 tests pass, installed JavaScript matches tested output, all three reported Upwork panes resolve idle. VS Code Restart Extensions loaded 1.4.1 at 2026-11-03 04:45:25 UTC (Nov 2 local); refreshed panel has no question icons. All 19 live sessions remain open. (GOAL-01)
 
 - [x] [P1] [TASK-018] Build and install shared state engine, Gemini integration and reusable local-client bridge as 1.4.0 — 47 tests pass; live Gemini and generic lifecycle tests pass; installed JavaScript matches compiled output. (GOAL-01)
 - [x] [P1] [TASK-020] Verify loaded 1.4.0 activation — confirmed in diag.log on Nov 2 at 18:45:22 UTC. (GOAL-01)
