@@ -1,8 +1,16 @@
-# Public release — 2026-10-13
+# Public release
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## Published
+## 1.4.1 — prepared November 4, 2026
+
+- Runtime fixes are integrated in db37433; activation verified in c673e45 with 19 live/open sessions retained. The public downloadable release was still 1.3.1 when Max requested this update.
+- Updated README download filenames and the AI installation prompt to 1.4.1. Corrected its nonexistent setup.md reference to readme.md. Bundle now includes docs/agent-status.md and changelog.md.
+- Fresh Node 22 run: 48 tests pass. Packaged VSIX manifest verified as maxtymosh.persistent-terminal-tabs 1.4.1; every packaged JavaScript module matches compiled output.
+- Publisher authentication rechecked: vsce ls-publishers is empty; no VSCE_PAT/AZURE_ACCESS_TOKEN is available, no ~/.vsce store exists, and the canonical service registry has no matching Marketplace/Microsoft/Azure publisher reference. Marketplace submission remains blocked; no browser takeover or credentials requested in chat.
+- GitHub release publication and anonymous-download verification pending.
+
+## 1.3.1 — published October 13, 2026
 
 - Existing public MIT repository transferred from normlstudio/persistent-terminal-tabs to https://github.com/maxtymosh/persistent-terminal-tabs. Local origin updated. Historical commits and releases retained.
 - Version 1.3.1: https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.3.1.
@@ -17,7 +25,7 @@ Publisher ID remains maxtymosh. Local vsce publisher inventory is empty; canonic
 
 The installable package passes vsce packaging. Marketplace submission is NOT complete. Microsoft's publisher sign-in page was opened. User was asked for explicit permission to complete publisher setup/upload through the website, because the user's browser-control rule bars silently replacing an unauthenticated CLI with browser operation. No browser session was read or controlled.
 
-Next step: receive browser permission and Microsoft sign-in; inspect the publisher identity and permissions, register/verify maxtymosh if available and appropriate, and upload the prepared 1.3.1 VSIX. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status and repackage/publish a later patch only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
+Next step: receive browser permission and Microsoft sign-in; inspect the publisher identity and permissions, register/verify maxtymosh if available and appropriate, and upload the current 1.4.1 VSIX. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status and repackage/publish a later patch only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
 
 The earlier normlstudio/ptt-private-share handoff repository remains private; it is not the canonical public source.
 

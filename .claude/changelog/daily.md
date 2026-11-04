@@ -1,5 +1,10 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 4, 2026 — public 1.4.1 download
+
+- Prepared the public VSIX and installation bundle for 1.4.1, closing the gap between fixed public source and the older 1.3.1 download. Updated versioned install instructions, corrected the missing setup.md reference, and included the status integration guide.
+- Fresh verification: 48 tests pass; packaged JavaScript matches compiled output. Marketplace remains blocked by absent publisher authentication; GitHub publication is pending.
+
 ## Nov 2, 2026 — unknown dots and Codex idle regression
 
 - Fixed the 1.4.0 regression that classified ordinary Codex thread/project titles as unknown forever. All three reported Upwork sessions were verified at idle prompts; the corrected live detector resolves idle. Click refresh was already wired; a new activation test verifies the already-open early-return path refreshes immediately.
