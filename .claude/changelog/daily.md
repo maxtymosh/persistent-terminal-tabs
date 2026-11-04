@@ -2,8 +2,8 @@
 
 ## Nov 4, 2026 — public 1.4.1 download
 
-- Prepared the public VSIX and installation bundle for 1.4.1, closing the gap between fixed public source and the older 1.3.1 download. Updated versioned install instructions, corrected the missing setup.md reference, and included the status integration guide.
-- Fresh verification: 48 tests pass; packaged JavaScript matches compiled output. Marketplace remains blocked by absent publisher authentication; GitHub publication is pending.
+- Published the public VSIX and installation bundle for 1.4.1 as the latest GitHub release, closing the gap between fixed public source and the older 1.3.1 download. Updated versioned install instructions, corrected the missing setup.md reference, and included the status integration guide.
+- Fresh verification: 48 tests pass; packaged JavaScript matches compiled output. All four public assets were downloaded anonymously and matched byte-for-byte; release tag v1.4.1 resolves to 4b8b038. Marketplace remains blocked by absent publisher authentication.
 
 ## Nov 2, 2026 — unknown dots and Codex idle regression
 

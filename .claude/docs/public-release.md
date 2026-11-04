@@ -2,13 +2,16 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.4.1 — prepared November 4, 2026
+## 1.4.1 — published November 4, 2026
 
 - Runtime fixes are integrated in db37433; activation verified in c673e45 with 19 live/open sessions retained. The public downloadable release was still 1.3.1 when Max requested this update.
 - Updated README download filenames and the AI installation prompt to 1.4.1. Corrected its nonexistent setup.md reference to readme.md. Bundle now includes docs/agent-status.md and changelog.md.
 - Fresh Node 22 run: 48 tests pass. Packaged VSIX manifest verified as maxtymosh.persistent-terminal-tabs 1.4.1; every packaged JavaScript module matches compiled output.
 - Publisher authentication rechecked: vsce ls-publishers is empty; no VSCE_PAT/AZURE_ACCESS_TOKEN is available, no ~/.vsce store exists, and the canonical service registry has no matching Marketplace/Microsoft/Azure publisher reference. Marketplace submission remains blocked; no browser takeover or credentials requested in chat.
-- GitHub release publication and anonymous-download verification pending.
+- Published as the latest public release: https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.4.1. Tag resolves to 4b8b038aab8913d6f2d6c9ba18adf45c2a6b1ec7 on origin/main.
+- All four assets (VSIX, installation ZIP, install prompt, checksum manifest) downloaded anonymously and compared byte-for-byte with local release files. Nested VSIX and bundled guide/instructions verified.
+- VSIX SHA-256: ab6ed3f2c2847913cee2a0c553133104165ac904319db001f4e6d567c92d2add. ZIP SHA-256: 9ce6fdb9f02ec324f1e5838ced49a490afb8da0b942b1717cd2c4ac2a403c4f9.
+- Earlier unrelated untracked 1.3.1 ZIP/checksum files were preserved. No running terminals or user configuration changed for this public release.
 
 ## 1.3.1 — published October 13, 2026
 
