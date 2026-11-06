@@ -17,7 +17,7 @@ issue: null
 - [x] Preserve existing installations' saved arrangements and any later manual moves; never force placement on every activation.
 - [x] Keyboard shortcut follows the actual view. Provide an explicit Dock Beside Terminal command.
 - [x] Compile and all 55 tests pass. Native command completed in an isolated VS Code Extension Development Host; its renderer log records PTT_NATIVE_DOCK_SUCCEEDED. Native test storage is in-memory; cross-app persistence of VS Code layout is not separately claimed.
-- [x] Packaged and installed 1.5.1; all 18 installed JavaScript modules match compiled/tested output. Public download verification is recorded in the release record.
+- [x] Packaged and installed 1.5.1; all 18 installed JavaScript modules match compiled/tested output. [Public 1.5.1 release](https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.1) is latest, targets integrated feature 2b832e7, and all four anonymous downloads plus nested checksums match. Full evidence is in the release record.
 
 ## Implementation and ownership
 

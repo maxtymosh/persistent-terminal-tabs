@@ -2,11 +2,13 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.5.1 — new-user docking, November 6, 2026
+## 1.5.1 — published November 6, 2026
 
 - Max requested that new installs start with Sessions beside the native terminal view inside the Terminal panel, as in his screenshot. Added once-per-profile native docking, legacy-state preservation, an explicit docking command and a location-independent view-focus shortcut.
 - Compile and all 55 tests pass. Native Dock Beside Terminal completed in an isolated VS Code Extension Development Host; renderer log confirms PTT_NATIVE_DOCK_SUCCEEDED. The native smoke uses VS Code's in-memory test storage; first-run/repeat/legacy policy is covered by unit tests.
-- Packaged and installed maxtymosh.persistent-terminal-tabs 1.5.1. All 18 packaged/installed JavaScript modules match tested output. No reload or live user-layout migration was forced. Prepared public VSIX, installation ZIP, AI prompt and checksum manifest; public upload verification pending.
+- Packaged and installed maxtymosh.persistent-terminal-tabs 1.5.1. All 18 packaged/installed JavaScript modules match tested output. No reload or live user-layout migration was forced. The empty native-QA workspace slice and its exact index entry were removed after testing; all user chat state was retained.
+- Published as the latest public release: https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.1. Tag targets 2b832e7fb706ac0b09eeb821940d7a0eccc773aa on origin/main. All four assets downloaded anonymously and matched byte-for-byte; verified the nested VSIX and every bundled checksum. Uploaded digests also matched GitHub's API.
+- VSIX SHA-256: 90e1af277f229d72203927d5c05a1b4f36555eb52fc9e8d00019a505690640bd. ZIP SHA-256: 41e1d3373f080529efd94326c4265fd7e0b43e1bba45af4f7daa781082c957e9.
 - Marketplace submission retains the existing Microsoft publisher authentication blocker. No new sign-in or browser operation was attempted.
 
 ## 1.5.0 — published November 6, 2026

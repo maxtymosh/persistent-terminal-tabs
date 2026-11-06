@@ -5,6 +5,7 @@
 - New installs place Sessions beside the terminals inside the Terminal panel on first activation. Existing saved state and later manual moves stay untouched. Added Dock Beside Terminal for explicit repositioning and changed the shortcut to focus the actual view.
 - `[DECISION]` Use the native move-view command plus a one-time per-profile marker; keep stable view/container IDs and avoid rewriting VS Code settings/storage. Legacy saved state marks an upgrade rather than triggering a move.
 - All 55 tests pass. Native docking completed in an isolated VS Code Extension Development Host (renderer PTT_NATIVE_DOCK_SUCCEEDED); user terminals/layout were not moved by that test. Packaged and installed 1.5.1; all 18 runtime modules match tested output. No forced reload; the new-user policy will preserve Max's existing state/layout when activated.
+- Published latest public release 1.5.1 from 2b832e7. All four anonymous downloads match local assets; nested VSIX and bundled checksums verified. Removed the exact empty QA workspace slice/index entry. Marketplace remains pending publisher authentication.
 
 ## Nov 6, 2026 — reversible split groups
 
