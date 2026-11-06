@@ -2,11 +2,11 @@
 
 ## Nov 6, 2026 — reversible split groups
 
-- Prepared the public 1.5.0 download, installation prompt and bundle. Runtime matches the tested/installed build; all 17 modules verified. Rechecked Marketplace access after Max's explicit publishing request: no configured publisher authentication, public gallery query returns no PTT listing. Microsoft publisher sign-in/ownership remains required; no browser takeover.
+- Published the public 1.5.0 download, installation prompt and bundle as the latest GitHub release at tag b249074. Runtime matches the tested/installed build; all 17 modules verified. All four public assets downloaded anonymously and matched byte-for-byte, including nested VSIX and bundled checksums. Rechecked Marketplace access after Max's explicit publishing request: no configured publisher authentication, public gallery query returns no PTT listing. Microsoft publisher sign-in/ownership remains required; no browser takeover.
 - Added Uncombine Group into Separate Tabs beside Combine, in the group context menu and Command Palette. It uses native Unsplit without disposing running shells, retains pane order and focused group chat, and leaves sleeping chats closed.
 - `[DECISION]` Persist per-group split/separate layout; new and reopened chats respect separation until an explicit Combine. Legacy groups stay split; canceled large-group Combine leaves the preference unchanged.
 - Registered-command coverage verifies repeated separation, native group ordering, unchanged session metadata, unrelated groups, new/reopened chats, explicit recombination, canceled Combine, empty/stale groups and menu wiring. Compile and all 50 tests passed on Node 22.22.2.
-- Packaged and installed 1.5.0; all 17 JavaScript modules in the VSIX and installed extension match tested output. No window reload or manipulation of live user terminals; activation awaits Restart Extensions. Public downloadable release remains 1.4.1.
+- Packaged and installed 1.5.0; all 17 JavaScript modules in the VSIX and installed extension match tested output. No window reload or manipulation of live user terminals; activation awaits Restart Extensions. Public downloadable release subsequently updated to 1.5.0 as recorded above.
 
 ## Nov 4, 2026 — public 1.4.1 download
 

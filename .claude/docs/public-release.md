@@ -2,13 +2,16 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.5.0 — release preparation, November 6, 2026
+## 1.5.0 — published November 6, 2026
 
 - Max requested the public update after the Uncombine feature, then explicitly requested Marketplace distribution. Runtime is integrated in cc46054; 50 tests passed in that feature run. Updated README download filenames, installation prompt and release notes to 1.5.0.
 - Rebuilt the VSIX; all 17 packaged JavaScript modules match compiled output and the installed 1.5.0 runtime. Prepared the VSIX, installation ZIP, install prompt and SHA-256 manifest in a session scratch directory, preserving unrelated pre-existing 1.3.1 ZIP/checksum files.
 - Rechecked Marketplace access: `vsce ls-publishers` returns no publishers; no VSCE_PAT/AZURE_ACCESS_TOKEN, local vsce store, Azure profile, matching canonical service credential reference or GitHub repository secret is configured. The public gallery API returned zero results for `maxtymosh.persistent-terminal-tabs`. The configured publisher ID does not establish that Max owns a registered Marketplace publisher.
 - Microsoft's current [publishing documentation](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) supports a manual VSIX upload or authenticated CLI publishing. GitHub Actions Trusted Publishing can remove long-lived tokens, but its trust policy first requires publisher management access. Provider sign-in/ownership is the unresolved prerequisite. No browser control or account setup was attempted; non-stop mode remains active.
-- Public GitHub upload and anonymous asset verification: pending.
+- Published as the latest public release: https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.0. Release tag targets b2490744f4d0638f0f4f774e62c47c831947c459 on origin/main.
+- All four assets downloaded anonymously and matched byte-for-byte with local release files. Verified the nested VSIX, installation prompt, status guide and every bundled checksum. Uploaded asset SHA-256 digests also matched GitHub's API.
+- VSIX SHA-256: 97c9d38e0f35d9449ff07795c136fc3307178077ad4eb6db81f364a84d66e5e7. ZIP SHA-256: aabdb44a9f428f6aea19b97edcb4c95e34e5be40aca983fda6651d7809510252.
+- Marketplace submission remains blocked by Microsoft publisher sign-in/access. The current package is ready; no Marketplace listing or submission is claimed. Shared release ownership remains parked for that continuation.
 
 ## 1.4.1 — published November 4, 2026
 
