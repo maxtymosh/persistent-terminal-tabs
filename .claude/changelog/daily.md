@@ -1,5 +1,11 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 6, 2026 — new-user terminal docking
+
+- New installs place Sessions beside the terminals inside the Terminal panel on first activation. Existing saved state and later manual moves stay untouched. Added Dock Beside Terminal for explicit repositioning and changed the shortcut to focus the actual view.
+- `[DECISION]` Use the native move-view command plus a one-time per-profile marker; keep stable view/container IDs and avoid rewriting VS Code settings/storage. Legacy saved state marks an upgrade rather than triggering a move.
+- All 55 tests pass. Native docking completed in an isolated VS Code Extension Development Host (renderer PTT_NATIVE_DOCK_SUCCEEDED); user terminals/layout were not moved by that test. Packaged and installed 1.5.1; all 18 runtime modules match tested output. No forced reload; the new-user policy will preserve Max's existing state/layout when activated.
+
 ## Nov 6, 2026 — reversible split groups
 
 - Published the public 1.5.0 download, installation prompt and bundle as the latest GitHub release at tag b249074. Runtime matches the tested/installed build; all 17 modules verified. All four public assets downloaded anonymously and matched byte-for-byte, including nested VSIX and bundled checksums. Rechecked Marketplace access after Max's explicit publishing request: no configured publisher authentication, public gallery query returns no PTT listing. Microsoft publisher sign-in/ownership remains required; no browser takeover.

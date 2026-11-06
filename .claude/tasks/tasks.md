@@ -62,6 +62,8 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
+- [x] [P1] [TASK-023] [Dock new installs beside Terminal](items/task-023-default-terminal-location.md) — once-per-profile default with legacy layout preservation; 55 tests and isolated native command smoke passed. Packaging and public release evidence live in the task and release record.
+
 - [x] [P1] [TASK-022] [Add Uncombine Group beside Combine](items/task-022-uncombine-group.md) — native lossless separation plus saved layout; automated acceptance passed. Local package/activation status is recorded in the task.
 
 - [x] [P1] [TASK-021] Correct false unknown Codex idle status and activate 1.4.1 — 48 tests pass, installed JavaScript matches tested output, all three reported Upwork panes resolve idle. VS Code Restart Extensions loaded 1.4.1 at 2026-11-03 04:45:25 UTC (Nov 2 local); refreshed panel has no question icons. All 19 live sessions remain open. (GOAL-01)

@@ -2,7 +2,7 @@
   "name": "persistent-terminal-tabs",
   "displayName": "Persistent Terminal Tabs",
   "description": "Keep Claude and Codex terminal chats organized in saved groups. Reconnect to live sessions after reopening VS Code with tmux.",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "publisher": "maxtymosh",
   "author": "Max Tymoshyn",
   "license": "MIT",
@@ -202,6 +202,11 @@
         "command": "terminalTabs.diagDots",
         "title": "Persistent Terminal Tabs: Diagnose Dots (refresh + log)",
         "icon": "$(debug-alt)"
+      },
+      {
+        "command": "terminalTabs.dockBesideTerminal",
+        "title": "Persistent Terminal Tabs: Dock Beside Terminal",
+        "icon": "$(layout-panel-right)"
       }
     ],
     "menus": {
@@ -377,7 +382,7 @@
     },
     "keybindings": [
       {
-        "command": "workbench.view.extension.terminalTabs",
+        "command": "terminalTabs.tree.focus",
         "key": "cmd+alt+t",
         "mac": "cmd+alt+t",
         "win": "ctrl+alt+t",

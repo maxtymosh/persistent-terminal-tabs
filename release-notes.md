@@ -1,16 +1,12 @@
-# Persistent Terminal Tabs 1.5.0
+# Persistent Terminal Tabs 1.5.1
 
-You can now reverse **Combine Group into Split View** with **Uncombine Group into Separate Tabs**.
+New users now start with **Persistent Terminal Tabs: Sessions** beside their terminals inside VS Code's **Terminal** panel.
 
-- Use the new button beside Combine, the group's right-click menu, or the Command Palette.
-- Separate open terminals without closing or recreating their running shells. Closed chats stay closed, and the group's saved membership and order stay intact.
-- Keep new and reopened chats in separate tabs until you select Combine again. Existing saved groups keep their previous split behavior.
-- Keep the terminal work-state fixes and status integrations from 1.4.1.
+- Apply the initial location once. Existing users keep their saved layout, and later manual moves stay where the user puts them.
+- Use **Persistent Terminal Tabs: Dock Beside Terminal** in the Command Palette to place Sessions there on request.
+- **Cmd+Alt+T** on macOS / **Ctrl+Alt+T** on Windows/Linux focuses Sessions wherever it is docked.
+- Includes the Combine / Uncombine group actions introduced in 1.5.0.
 
-Grok work detection remains unknown because cancellation signals failed verification. Other clients need a reliable integration; terminal output or CPU activity alone does not establish work. See [agent status setup](https://github.com/maxtymosh/persistent-terminal-tabs/blob/v1.5.0/docs/agent-status.md).
+Download `persistent-terminal-tabs-1.5.1.vsix` and use **Extensions: Install from VSIX**. Save your work and reload the window to activate the update. The installation bundle `ptt-install-bundle-1.5.1.zip` includes the extension, AI installation prompt, README, status integration guide and checksums. No source build is required.
 
-Download `persistent-terminal-tabs-1.5.0.vsix` and run **Extensions: Install from VSIX** in VS Code. Save your work and reload the window to activate it. Installing the file alone may leave the previous version running.
-
-Alternatively, download `ptt-install-bundle-1.5.0.zip`, extract it, and give `install-prompt.md` to an AI coding assistant on your computer. The bundle includes the extension, README, status integration guide and checksums. No source build is required. Marketplace publication remains pending Microsoft publisher authentication.
-
-Validation: 50 automated tests pass, including registered-command checks for lossless separation, pane order, saved layout, new/reopened chats and recombination. The 1.5.0 package was installed on macOS and its runtime files match the tested build. Live 1.5.0 UI acceptance and native Windows/Linux runtime checks remain unverified.
+Validation: 55 automated tests pass, including new-install docking policy, legacy placement preservation and later activations. The native move-view command also completed in an isolated macOS VS Code Extension Development Host. Native Windows/Linux runtime behavior was not independently retested. Marketplace submission still requires Microsoft publisher authentication.

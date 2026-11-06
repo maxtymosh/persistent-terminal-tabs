@@ -20,14 +20,14 @@ Free and open source, under the MIT license. Works with Claude Code, OpenAI Code
 ## Install
 
 1. [Download the latest release](https://github.com/maxtymosh/persistent-terminal-tabs/releases/latest).
-2. Download its `persistent-terminal-tabs-1.5.0.vsix` asset.
+2. Download its `persistent-terminal-tabs-1.5.1.vsix` asset.
 3. In VS Code, open the Command Palette → **Extensions: Install from VSIX** and select that file.
 4. Run **Developer: Reload Window** after saving your work.
 
 Or use the VS Code CLI:
 
 ```sh
-code --install-extension persistent-terminal-tabs-1.5.0.vsix
+code --install-extension persistent-terminal-tabs-1.5.1.vsix
 ```
 
 The release also includes a ZIP with the extension and an [AI installation prompt](install-prompt.md) that you can give to a coding assistant with access to your computer. No source build is required.
@@ -45,7 +45,7 @@ PTT works with terminal-based agents. ChatGPT conversations in a browser and cha
 
 ## Start using it
 
-1. Open **Persistent Terminal Tabs** in the Activity Bar, or press **Cmd+Alt+T** on macOS / **Ctrl+Alt+T** on Windows/Linux.
+1. On a new install, **Persistent Terminal Tabs: Sessions** opens beside the terminals inside the **Terminal** panel. Press **Cmd+Alt+T** on macOS / **Ctrl+Alt+T** on Windows/Linux to focus it wherever you dock it. Existing users keep their saved layout; **Persistent Terminal Tabs: Dock Beside Terminal** in the Command Palette places it beside the terminals on request.
 2. Click **Add Group**, then choose your project folder.
 3. Click the group's **+** to create a chat. A new tmux chat opens a shell; type `claude`, `codex`, `grok`, or `agy` to start your agent.
 4. Rename chats and drag them into the order or group you want. Click a group to open its chats. Use **Combine Group into Split View** to share one terminal tab, or **Uncombine Group into Separate Tabs** beside it to return to individual tabs. Both actions are also in the group's right-click menu. Uncombine keeps running terminals alive and leaves closed chats closed; new and reopened chats keep the separate layout until you Combine again.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.1 — November 6, 2026
+
+- New installs dock Sessions beside the terminals inside the Terminal panel on first activation.
+- Preserve existing users' layouts and later manual moves. Add Dock Beside Terminal to place the view there on request.
+- Focus the actual Sessions view with Cmd+Alt+T / Ctrl+Alt+T, including when it has been moved out of its original container.
+
 ## 1.5.0 — November 6, 2026
 
 - Added Uncombine Group into Separate Tabs beside Combine and in the group's context menu and Command Palette.

@@ -2,6 +2,13 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
+## 1.5.1 — new-user docking, November 6, 2026
+
+- Max requested that new installs start with Sessions beside the native terminal view inside the Terminal panel, as in his screenshot. Added once-per-profile native docking, legacy-state preservation, an explicit docking command and a location-independent view-focus shortcut.
+- Compile and all 55 tests pass. Native Dock Beside Terminal completed in an isolated VS Code Extension Development Host; renderer log confirms PTT_NATIVE_DOCK_SUCCEEDED. The native smoke uses VS Code's in-memory test storage; first-run/repeat/legacy policy is covered by unit tests.
+- Packaged and installed maxtymosh.persistent-terminal-tabs 1.5.1. All 18 packaged/installed JavaScript modules match tested output. No reload or live user-layout migration was forced. Prepared public VSIX, installation ZIP, AI prompt and checksum manifest; public upload verification pending.
+- Marketplace submission retains the existing Microsoft publisher authentication blocker. No new sign-in or browser operation was attempted.
+
 ## 1.5.0 — published November 6, 2026
 
 - Max requested the public update after the Uncombine feature, then explicitly requested Marketplace distribution. Runtime is integrated in cc46054; 50 tests passed in that feature run. Updated README download filenames, installation prompt and release notes to 1.5.0.

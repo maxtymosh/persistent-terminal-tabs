@@ -2,6 +2,13 @@
 
 > Updated: Nov 6, 2026
 
+## Initial view location — 1.5.1
+
+- `[DECISION]` New installs use the native `vscode.moveViews` command to put `terminalTabs.tree` in `workbench.panel.terminal`, sharing the Terminal container horizontally rather than creating a separate panel tab. This command was checked in installed VS Code and upstream 1.85.2 source. The view and original contribution IDs stay stable to preserve upgrades and existing saved locations.
+- Apply once per local profile using the `terminalTabs.defaultViewLocation.v1` Memento marker. Legacy global `state.json` or any workspace-slice directory identifies an existing installation; snapshot this before activation writes state. Upgrades are marked initialized without moving anything. With no Memento, stay passive. Mark before moving, so failed/unsupported commands and later user moves never cause repeated startup layout changes. An explicit Dock Beside Terminal command provides recovery/repositioning.
+- The shortcut targets `terminalTabs.tree.focus`, following the view wherever VS Code stores it. No VS Code settings or storage database is rewritten. Manual resets still use VS Code's declared original container; the docking command restores the preferred arrangement.
+- Validation: 55 tests pass, including fresh/legacy/second activation, failure/unsupported-command paths, migration evidence and shortcut/command wiring. Native Dock Beside Terminal completed inside an isolated Extension Development Host; renderer log confirms PTT_NATIVE_DOCK_SUCCEEDED. VS Code extension tests use in-memory view storage, so that native smoke does not claim persistence across full app restarts; marker behavior is covered by automated tests.
+
 ## Group terminal layout — 1.5.0
 
 - `[DECISION]` `Group.layout` persists `split` or `separate`; omitted legacy values retain split behavior. Group clicks, new chats, reopen and all render paths use this preference through the shared split-anchor resolver. Explicit Combine returns to split mode only after any large-group confirmation succeeds.

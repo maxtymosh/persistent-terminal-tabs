@@ -1,4 +1,5 @@
 import { isAgentWorking } from './working-status';
+import { dockBesideTerminal, hasExistingPttState, initializeViewLocation } from './view-location';
 import { AgentStatus, UNKNOWN_STATUS } from './agent-status';
 import { configureCodexHistory, refreshCodexThreads } from './codex-history';
 import * as vscode from 'vscode';
@@ -1467,6 +1468,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     return;
   }
 
+  // Snapshot before activation writes diagnostics or saves this workspace's first state slice.
+  const upgrading = hasExistingPttState();
   out = vscode.window.createOutputChannel('Persistent Terminal Tabs');
   const wsKey = workspaceKey();
   store = StateStore.forWorkspace(wsKey);
@@ -1607,6 +1610,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('terminalTabs.openGroup', openGroup),
     vscode.commands.registerCommand('terminalTabs.combineGroup', combineGroup),
     vscode.commands.registerCommand('terminalTabs.uncombineGroup', uncombineGroup),
+    vscode.commands.registerCommand('terminalTabs.dockBesideTerminal', async () => {
+      if (!await dockBesideTerminal()) {
+        void vscode.window.showWarningMessage('PTT could not dock automatically. Drag its Sessions view beside the Terminal view.');
+      }
+    }),
     vscode.commands.registerCommand('terminalTabs.dropTab', dropTab),
     vscode.commands.registerCommand('terminalTabs.dropGroup', dropGroup),
     vscode.commands.registerCommand('terminalTabs.renameGroup', renameGroup),
@@ -1665,6 +1673,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }
   }
   tree.refresh();
+
+  const placement = await initializeViewLocation(context.globalState, upgrading);
+  if (placement !== 'unchanged') log(`· initial view placement: ${placement}`);
 
   // Enforce "running ⟺ open" on a fresh window: kill this slice's sessions left alive by the last quit that aren't
   // being opened now, so grey = no tmux from the first paint. Then the idle backstop: auto-suspend parked sessions
