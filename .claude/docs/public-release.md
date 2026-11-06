@@ -2,6 +2,14 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
+## 1.5.0 — release preparation, November 6, 2026
+
+- Max requested the public update after the Uncombine feature, then explicitly requested Marketplace distribution. Runtime is integrated in cc46054; 50 tests passed in that feature run. Updated README download filenames, installation prompt and release notes to 1.5.0.
+- Rebuilt the VSIX; all 17 packaged JavaScript modules match compiled output and the installed 1.5.0 runtime. Prepared the VSIX, installation ZIP, install prompt and SHA-256 manifest in a session scratch directory, preserving unrelated pre-existing 1.3.1 ZIP/checksum files.
+- Rechecked Marketplace access: `vsce ls-publishers` returns no publishers; no VSCE_PAT/AZURE_ACCESS_TOKEN, local vsce store, Azure profile, matching canonical service credential reference or GitHub repository secret is configured. The public gallery API returned zero results for `maxtymosh.persistent-terminal-tabs`. The configured publisher ID does not establish that Max owns a registered Marketplace publisher.
+- Microsoft's current [publishing documentation](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) supports a manual VSIX upload or authenticated CLI publishing. GitHub Actions Trusted Publishing can remove long-lived tokens, but its trust policy first requires publisher management access. Provider sign-in/ownership is the unresolved prerequisite. No browser control or account setup was attempted; non-stop mode remains active.
+- Public GitHub upload and anonymous asset verification: pending.
+
 ## 1.4.1 — published November 4, 2026
 
 - Runtime fixes are integrated in db37433; activation verified in c673e45 with 19 live/open sessions retained. The public downloadable release was still 1.3.1 when Max requested this update.
@@ -28,7 +36,7 @@ Publisher ID remains maxtymosh. Local vsce publisher inventory is empty; canonic
 
 The installable package passes vsce packaging. Marketplace submission is NOT complete. Microsoft's publisher sign-in page was opened. User was asked for explicit permission to complete publisher setup/upload through the website, because the user's browser-control rule bars silently replacing an unauthenticated CLI with browser operation. No browser session was read or controlled.
 
-Next step: receive browser permission and Microsoft sign-in; inspect the publisher identity and permissions, register/verify maxtymosh if available and appropriate, and upload the current 1.4.1 VSIX. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status and repackage/publish a later patch only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
+Next step: complete Microsoft publisher sign-in through an approved supported route; inspect publisher identity and permissions, register maxtymosh if available and appropriate, and upload the prepared 1.5.0 VSIX. Browser operation requires explicit approval under Max's standing rule; sign-in alone is allowed, but no login flow is opened during active non-stop mode. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
 
 The earlier normlstudio/ptt-private-share handoff repository remains private; it is not the canonical public source.
 

@@ -2,6 +2,7 @@
 
 ## Nov 6, 2026 — reversible split groups
 
+- Prepared the public 1.5.0 download, installation prompt and bundle. Runtime matches the tested/installed build; all 17 modules verified. Rechecked Marketplace access after Max's explicit publishing request: no configured publisher authentication, public gallery query returns no PTT listing. Microsoft publisher sign-in/ownership remains required; no browser takeover.
 - Added Uncombine Group into Separate Tabs beside Combine, in the group context menu and Command Palette. It uses native Unsplit without disposing running shells, retains pane order and focused group chat, and leaves sleeping chats closed.
 - `[DECISION]` Persist per-group split/separate layout; new and reopened chats respect separation until an explicit Combine. Legacy groups stay split; canceled large-group Combine leaves the preference unchanged.
 - Registered-command coverage verifies repeated separation, native group ordering, unchanged session metadata, unrelated groups, new/reopened chats, explicit recombination, canceled Combine, empty/stale groups and menu wiring. Compile and all 50 tests passed on Node 22.22.2.
