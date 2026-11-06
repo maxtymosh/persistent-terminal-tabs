@@ -48,6 +48,8 @@ export function agentDisplayName(meta?: SessionMeta): string {
 
 export interface Group {
   name: string;
+  /** Native terminal layout. Omitted on older slices -> split, preserving the existing default. */
+  layout?: 'split' | 'separate';
   /** Explicit default folder for NEW chats. Existing sessions retain their own cwd for resume. */
   cwd?: string;
   /** Saved display name of the chosen project, independent of the group's editable title. */

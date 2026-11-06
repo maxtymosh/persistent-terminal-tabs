@@ -48,7 +48,7 @@ PTT works with terminal-based agents. ChatGPT conversations in a browser and cha
 1. Open **Persistent Terminal Tabs** in the Activity Bar, or press **Cmd+Alt+T** on macOS / **Ctrl+Alt+T** on Windows/Linux.
 2. Click **Add Group**, then choose your project folder.
 3. Click the group's **+** to create a chat. A new tmux chat opens a shell; type `claude`, `codex`, `grok`, or `agy` to start your agent.
-4. Rename chats and drag them into the order or group you want. Click a group to open its chats as split terminals.
+4. Rename chats and drag them into the order or group you want. Click a group to open its chats. Use **Combine Group into Split View** to share one terminal tab, or **Uncombine Group into Separate Tabs** beside it to return to individual tabs. Both actions are also in the group's right-click menu. Uncombine keeps running terminals alive and leaves closed chats closed; new and reopened chats keep the separate layout until you Combine again.
 5. Close and reopen VS Code. Your saved chats are still in the sidebar. Click one to return to it.
 
 Up to eight saved chats reopen automatically by default. With more chats, PTT shows the saved list and opens them when clicked, avoiding a large memory spike.

@@ -1,6 +1,13 @@
 # Persistent Terminal Tabs — architecture decisions
 
-> Updated: Nov 2, 2026
+> Updated: Nov 6, 2026
+
+## Group terminal layout — 1.5.0
+
+- `[DECISION]` `Group.layout` persists `split` or `separate`; omitted legacy values retain split behavior. Group clicks, new chats, reopen and all render paths use this preference through the shared split-anchor resolver. Explicit Combine returns to split mode only after any large-group confirmation succeeds.
+- Uncombine uses VS Code's native `workbench.action.terminal.unsplit` sequentially on the group's currently open terminals. It never disposes/recreates shells or opens sleeping chats. Move siblings in panel order, then visit the first pane last, because native Unsplit appends terminal groups. Restore the previously active chat within the group. Group membership and session metadata remain intact.
+- Both Combine and Uncombine remain available as row buttons, context actions and palette commands. The preference records PTT's intended layout; manual native-tab arrangement is not observable through the public terminal API.
+- Native command semantics were inspected in the installed VS Code workbench: Unsplit removes an instance from its group and creates a new group around that same instance. Automated registered-command tests model that operation and verify lossless separation and ordering; live UI acceptance is recorded separately.
 
 ## Group projects
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0 — November 6, 2026
+
+- Added Uncombine Group into Separate Tabs beside Combine and in the group's context menu and Command Palette.
+- Separate existing panes with VS Code's native Unsplit action, preserving running shells, panel order, session identities and closed chats.
+- Remember each group's layout: new and reopened chats remain separate until Combine is selected again. Older saved groups retain split behavior.
+
 ## 1.4.1 — November 2, 2026
 
 - Fixed Codex idle sessions staying unknown: recognize native thread/project and Ready titles after work finishes.

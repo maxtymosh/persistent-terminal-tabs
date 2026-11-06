@@ -1,5 +1,12 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 6, 2026 — reversible split groups
+
+- Added Uncombine Group into Separate Tabs beside Combine, in the group context menu and Command Palette. It uses native Unsplit without disposing running shells, retains pane order and focused group chat, and leaves sleeping chats closed.
+- `[DECISION]` Persist per-group split/separate layout; new and reopened chats respect separation until an explicit Combine. Legacy groups stay split; canceled large-group Combine leaves the preference unchanged.
+- Registered-command coverage verifies repeated separation, native group ordering, unchanged session metadata, unrelated groups, new/reopened chats, explicit recombination, canceled Combine, empty/stale groups and menu wiring. Compile and all 50 tests passed on Node 22.22.2.
+- Packaged and installed 1.5.0; all 17 JavaScript modules in the VSIX and installed extension match tested output. No window reload or manipulation of live user terminals; activation awaits Restart Extensions. Public downloadable release remains 1.4.1.
+
 ## Nov 4, 2026 — public 1.4.1 download
 
 - Published the public VSIX and installation bundle for 1.4.1 as the latest GitHub release, closing the gap between fixed public source and the older 1.3.1 download. Updated versioned install instructions, corrected the missing setup.md reference, and included the status integration guide.

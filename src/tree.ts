@@ -115,7 +115,7 @@ export class TabsTree
       // resourceUri is only a hook for provideFileDecoration() to tint the active row green.
       item.resourceUri = vscode.Uri.parse(`${DECO_SCHEME}://group/${encodeURIComponent(node.name)}`);
       item.iconPath = groupIcon(node.name, g?.color, active);
-      // click the group → open/regroup it as one split-tab (idempotent; selection/tint still fire too)
+      // Click opens the group in its saved native layout; selection/tint still fire too.
       item.command = { command: 'terminalTabs.openGroup', title: 'Open Group', arguments: [node] };
       return item;
     }

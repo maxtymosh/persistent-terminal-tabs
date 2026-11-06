@@ -337,6 +337,7 @@ function sessionAliveCached(id: string): boolean {
  * dead entries via pruneDeadTerminals() at handler entry, before any new terminal is created.
  */
 function anchorFor(group: string): vscode.Terminal | undefined {
+  if (store.groups.find((g) => g.name === group)?.layout === 'separate') return undefined;
   let last: vscode.Terminal | undefined;
   for (const [t, id] of liveTerminals) if (store.groupOf(id)?.name === group) last = t;
   return last;
@@ -765,27 +766,37 @@ function groupAlreadyCombined(g: { sessionIds: string[] }): boolean {
 async function renderGroup(name: string, force = false): Promise<void> {
   pruneDeadTerminals(); // accurate isOpen/anchor before deciding whether to re-lay
   const g = store.groups.find((x) => x.name === name);
-  if (!g || g.sessionIds.length === 0) return;
+  if (!g) return;
+  if (g.sessionIds.length === 0) {
+    if (force) { g.layout = 'split'; store.save(); tree?.refresh(); }
+    return;
+  }
+  const separate = g.layout === 'separate' && !force;
+  if (separate && g.sessionIds.every(isOpen)) { terminalFor(g.sessionIds[0])?.show(); return; }
   // The gentle path (a plain group-row click) skips the re-lay when the group already READS as one split, so
   // selecting a group doesn't thrash. But that read is a best-effort insertion-order heuristic — VS Code exposes
   // no API for true native split state — so it false-positives when a group's chats are open as SEPARATE tabs
   // (each opened individually is still contiguous in insertion order). An EXPLICIT Combine (`force`) must never
   // trust it, or it no-ops exactly when the user wants the merge ("nothing happens"). force → always re-lay.
-  if (!force && groupAlreadyCombined(g)) { terminalFor(g.sessionIds[0])?.show(); return; }
+  if (!force && !separate && groupAlreadyCombined(g)) { terminalFor(g.sessionIds[0])?.show(); return; }
   if (g.sessionIds.length > 12) {
     const go = await vscode.window.showWarningMessage(
-      `“${name}” has ${g.sessionIds.length} chats — open them all as one split-tab?`, 'Open all', 'Cancel');
+      `“${name}” has ${g.sessionIds.length} chats — open them all as ${separate ? 'separate tabs' : 'one split-tab'}?`, 'Open all', 'Cancel');
     if (go !== 'Open all') return;
   }
-  for (const [t, id] of [...liveTerminals]) {
-    if (g.sessionIds.includes(id)) { liveTerminals.delete(t); t.dispose(); }
+  if (!separate) {
+    g.layout = 'split';
+    store.save();
+    for (const [t, id] of [...liveTerminals]) {
+      if (g.sessionIds.includes(id)) { liveTerminals.delete(t); t.dispose(); }
+    }
   }
   for (const id of g.sessionIds) {
-    openTerminal(id, store.meta(id) ?? { title: id.slice(0, 8), project: '', cwd: '' }, true);
+    if (!isOpen(id)) openTerminal(id, store.meta(id) ?? { title: id.slice(0, 8), project: '', cwd: '' }, true);
   }
   terminalFor(g.sessionIds[0])?.show();
   tree?.refresh();
-  log(`▣ opened group “${name}” as one split-tab (${g.sessionIds.length} chat(s))`);
+  log(`▣ opened group “${name}” as ${separate ? 'separate tabs' : 'one split-tab'} (${g.sessionIds.length} chat(s))`);
 }
 
 /** Click a group row: render that group as one grouped split-tab (gentle — focuses if it already reads combined). */
@@ -798,9 +809,32 @@ function openGroup(node?: Node): void {
 /** The split-horizontal button (and right-click → Combine): FORCE-merge a group's chats into one split-view tab,
  *  even when they already read as combined — the gentle openGroup path can no-op on that unreliable read, which is
  *  the "Combine does nothing" bug. Lossless: tmux reattaches every disposed pane as it's recreated. */
-function combineGroup(node?: Node): void {
+function combineGroup(node?: Node): Promise<void> {
   const name = node?.kind === 'group' ? node.name : currentGroup();
-  void renderGroup(name, true);
+  return renderGroup(name, true);
+}
+
+/** Move existing panes into standalone native tabs without recreating shells or detaching agents.
+ * Closed chats stay closed; subsequent opens/new chats keep the saved separate layout. */
+async function uncombineGroup(node?: Node): Promise<void> {
+  pruneDeadTerminals();
+  const name = node?.kind === 'group' ? node.name : currentGroup();
+  const g = store.groups.find((x) => x.name === name);
+  if (!g) return;
+  g.layout = 'separate';
+  store.save();
+  const terminals = g.sessionIds.map(terminalFor).filter((t): t is vscode.Terminal => !!t);
+  const focused = terminals.find((t) => t === vscode.window.activeTerminal) ?? terminals[0];
+  // Unsplit appends a native tab. Leave the first pane in place while moving its siblings in panel order.
+  // Visit it last too, in case it still shares a native tab with a manually moved, unrelated terminal.
+  for (const terminal of [...terminals.slice(1), ...terminals.slice(0, 1)]) {
+    if (!vscode.window.terminals.includes(terminal)) continue;
+    terminal.show();
+    await vscode.commands.executeCommand('workbench.action.terminal.unsplit');
+  }
+  if (focused && vscode.window.terminals.includes(focused)) focused.show();
+  tree?.refresh();
+  log(`▤ separated group “${name}” (${terminals.length} open chat(s); closed chats untouched)`);
 }
 
 /** Drop one tab from the panel (kill its terminal + remove from state immediately). */
@@ -1572,6 +1606,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('terminalTabs.openTab', openTab),
     vscode.commands.registerCommand('terminalTabs.openGroup', openGroup),
     vscode.commands.registerCommand('terminalTabs.combineGroup', combineGroup),
+    vscode.commands.registerCommand('terminalTabs.uncombineGroup', uncombineGroup),
     vscode.commands.registerCommand('terminalTabs.dropTab', dropTab),
     vscode.commands.registerCommand('terminalTabs.dropGroup', dropGroup),
     vscode.commands.registerCommand('terminalTabs.renameGroup', renameGroup),
