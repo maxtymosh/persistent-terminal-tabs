@@ -2,6 +2,13 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
+## 1.5.3 — prepared November 7, 2026
+
+- Max reports lag with a normal workload of 50 open chats. Background status checks previously took four synchronous tmux/process snapshots per tick; they now share one bounded asynchronous read, including concurrent clicks/catch-ups. Background Codex identity matching reuses the native title. Legacy Grok/Antigravity fd discovery stays on startup/explicit recap paths.
+- Controlled fixtures cover 50 open chats plus 73 sleeping records, and 50/100-session status reads with exactly two child probes. A local live-10-session comparison reduced event-loop delay from 224 ms to 1 ms (225 ms versus 56 ms total read time). This is not a measured 50-live-agent benchmark or a claim to resolve all machine contention.
+- Compile and 59-check acceptance verified with Node 22.22.2. Earlier full runs passed; final parallel and serial runs passed 58/59 under extreme system load. The unchanged provider-timeout fixture passed in isolation; its 600 ms subprocess budget was not widened. Evidence retained in the common Git directory under norml/worktrees/ptt-lag-artifacts.
+- Packaged and installed 1.5.3. All 18 VSIX runtime modules match final compiled output. No live chat was closed or window/extension host restarted. Installed-runtime parity and public downloads are verified before final handoff. Marketplace retains the Microsoft publisher authentication blocker.
+
 ## 1.5.2 — published November 6, 2026
 
 - Max's screenshot revealed an empty Uncombine button. The manifest used `ungroup`, which does not exist in VS Code's icon registry. Replaced it with `multiple-windows` (glyph U+EB23), verified in the installed workbench and rendered/visually inspected using its actual codicon.ttf font.
@@ -54,7 +61,7 @@ Publisher ID remains maxtymosh. Local vsce publisher inventory is empty; canonic
 
 The installable package passes vsce packaging. Marketplace submission is NOT complete. Microsoft's publisher sign-in page was opened. User was asked for explicit permission to complete publisher setup/upload through the website, because the user's browser-control rule bars silently replacing an unauthenticated CLI with browser operation. No browser session was read or controlled.
 
-Next step: complete Microsoft publisher sign-in through an approved supported route; inspect publisher identity and permissions, register maxtymosh if available and appropriate, and upload the prepared 1.5.0 VSIX. Browser operation requires explicit approval under Max's standing rule; sign-in alone is allowed, but no login flow is opened during active non-stop mode. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
+Next step: complete Microsoft publisher sign-in through an approved supported route; inspect publisher identity and permissions, register maxtymosh if available and appropriate, and upload the current prepared 1.5.3 VSIX. Browser operation requires explicit approval under Max's standing rule; sign-in alone is allowed, but no login flow is opened during active non-stop mode. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
 
 The earlier normlstudio/ptt-private-share handoff repository remains private; it is not the canonical public source.
 
