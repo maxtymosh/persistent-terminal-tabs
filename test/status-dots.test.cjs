@@ -64,7 +64,7 @@ test('activation retains verified attached terminals and paints native work tran
     Module._load=function(name,...args){
       if(name==='vscode')return vscode;
       if(name==='./codex-history')return{configureCodexHistory(){},refreshCodexThreads:async()=>{}};
-      if(name==='./tmux')return{tmuxAvailable:()=>true,applyTmuxConf(){},listSessions:snapshot,attachedClientSessions:()=>new Map([[500,'live0001']]),tmuxDiag:()=>'',hasTranscript:()=>false};
+      if(name==='./tmux')return{tmuxAvailable:()=>true,applyTmuxConf(){},listSessions:snapshot,listSessionsAsync:async()=>snapshot(),attachedClientSessions:()=>new Map([[500,'live0001']]),tmuxDiag:()=>'',hasTranscript:()=>false};
       if(name==='./sessions')return{transcriptCwds:()=>new Map()};
       return real.call(this,name,...args);
     };
@@ -73,9 +73,9 @@ test('activation retains verified attached terminals and paints native work tran
       assert.equal(destroyed,1,'only unverified stray is disposed');assert.equal(launched,0,'no cold or detached session is launched');
       const color=id=>provider.getTreeItem({kind:'tab',id,group:'Test'}).iconPath.color?.id;
       assert.equal(color(ids[0]),'charts.blue');
-      while(pending.length)pending.shift()(); // drain startup catch-ups before testing the click
+      while(pending.length)await pending.shift()(); // drain startup catch-ups before testing the click
       working=false;handlers.get('terminalTabs.openTab')({kind:'tab',id:ids[0],group:'Test'});
-      while(pending.length)pending.shift()();
+      while(pending.length)await pending.shift()();
       assert.equal(color(ids[0]),'charts.green','clicking an already open tab refreshes state');
       assert.equal(color(ids[1]),'charts.yellow');
       working=true;handlers.get('terminalTabs.diagDots')();assert.equal(color(ids[0]),'charts.blue');

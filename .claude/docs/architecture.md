@@ -1,6 +1,13 @@
 # Persistent Terminal Tabs — architecture decisions
 
-> Updated: Nov 6, 2026
+> Updated: Nov 7, 2026
+
+## Nonblocking status polling — 1.5.3
+
+- `[DECISION]` Dot timer, click refresh and startup catch-up snapshots use asynchronous tmux/ps probes (2-second per-child timeout, 8 MiB output cap), with one in-flight read shared across those callers. Explicit synchronous diagnostics remain available. Both paths share the same native foreground/process-birth/state interpretation; do not replace evidence with activity/CPU guesses.
+- Cache the resulting session snapshot for all identity binders, eliminating three duplicate full-machine snapshots per tick. Background Codex binding matches the cached native OSC title against the existing unique-name history cache, including verified shell-wrapped Codex. It does not recapture each pane or run lsof per tick. Expensive legacy transcript/fd discovery remains in startup and explicit recap paths; automatic Grok/Antigravity identity discovery on the high-frequency timer is deferred to those paths. Previously saved identity/resume metadata remains intact. Native work-state polling for every agent continues normally.
+- Share live-status reads independently from the history metadata lock: slow history must not prevent later dot refreshes. A newer explicit action invalidates older async results; deactivation rejects late results and prevents new background reads. Click focus returns immediately while its shared refresh runs. Plain-terminal mode skips tmux polling.
+- Evidence: live 10-session old four-snapshot sequence took 225 ms (8 synchronous children), with 224 ms event-loop delay; a single async snapshot took 56 ms (2 async children), with 1 ms event-loop delay. These are local measurements, not a guarantee for all machines. Controlled 50/100-chat fixtures retain exactly 2 async probes and correct working/idle/attachment/RAM state; extension activation/polling fixture uses 50 open + 73 saved closed chats. Tests cover slow probes, concurrent ticks/clicks, rejected stale reads, shutdown, process exit, missing process evidence and no-server fallback. Overall host load was also elevated during diagnosis; this repair addresses measured PTT stalls without claiming every system-wide lag source is resolved.
 
 ## Initial view location — 1.5.1
 

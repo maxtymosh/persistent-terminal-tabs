@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.3 — November 7, 2026
+
+- Keep status polling and click refresh responsive with asynchronous, bounded tmux/process reads shared across concurrent requests.
+- Reuse one session snapshot instead of taking four full-machine snapshots each tick; use cached Codex titles for background identity matching.
+- Ignore stale results after explicit actions or shutdown. Preserve native work-state and attachment detection.
+- Verify 50-open-chat and 100-chat stress fixtures without per-chat system scans.
+
 ## 1.5.2 — November 6, 2026
 
 - Fix the blank Uncombine Group button by replacing the nonexistent `ungroup` icon with the built-in `multiple-windows` icon.

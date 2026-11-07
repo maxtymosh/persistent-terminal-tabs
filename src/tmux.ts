@@ -399,16 +399,42 @@ export function listSessions(): TmuxSessionInfo[] {
   }
   if (raw === null) return []; // no server / no sessions on any address
   let processes = new Map<string, PaneProcess>();
-  const kids = new Map<string, string[]>();
   try {
     processes = parseProcessSnapshot(cp.execFileSync('ps',
       ['-axo', 'pid=,ppid=,pgid=,tpgid=,tty=,stat=,rss=,lstart=,comm='],
       { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C', TZ: 'UTC' }, timeout: 2000, maxBuffer: 8 * 1024 * 1024 }));
-    for (const process of processes.values()) {
-      const a = kids.get(process.ppid);
-      if (a) a.push(process.pid); else kids.set(process.ppid, [process.pid]);
-    }
   } catch { /* unknown ownership -> no blue; attachment data still works */ }
+  return sessionSnapshot(raw, processes);
+}
+
+/** Background/UI polling must never wait synchronously for tmux or a full system process listing. */
+export async function listSessionsAsync(): Promise<TmuxSessionInfo[]> {
+  const tmux = tmuxPath();
+  if (!tmux) return [];
+  const run = (file: string, args: string[], env = process.env): Promise<string | null> => new Promise(resolve => {
+    cp.execFile(file, args, { encoding: 'utf8', env, timeout: 2000, maxBuffer: 8 * 1024 * 1024 },
+      (error, stdout) => resolve(error ? null : stdout));
+  });
+  const format = '#{session_name}|#{session_attached}|#{pane_pid}|#{pane_current_command}|#{session_activity}|#{pane_tty}|#{pane_title}';
+  const env = { ...process.env, LANG: process.env.LANG || 'en_US.UTF-8' };
+  let raw = await run(tmux, [...socketArgs(), 'list-sessions', '-F', format], env);
+  if (raw === null || raw.trim() === '') {
+    const alternate = await run(tmux, ['-L', SOCKET, 'list-sessions', '-F', format], env);
+    if (alternate !== null && alternate.trim() !== '') raw = alternate;
+  }
+  if (!raw?.trim()) return [];
+  const ps = await run('ps', ['-axo', 'pid=,ppid=,pgid=,tpgid=,tty=,stat=,rss=,lstart=,comm='],
+    { ...process.env, LC_ALL: 'C', TZ: 'UTC' });
+  return sessionSnapshot(raw, ps === null ? new Map() : parseProcessSnapshot(ps));
+}
+
+/** Shared ownership/status interpretation keeps async polling identical to explicit synchronous diagnostics. */
+function sessionSnapshot(raw: string, processes: Map<string, PaneProcess>): TmuxSessionInfo[] {
+  const kids = new Map<string, string[]>();
+  for (const process of processes.values()) {
+    const a = kids.get(process.ppid);
+    if (a) a.push(process.pid); else kids.set(process.ppid, [process.pid]);
+  }
   const subtreeKB = (pid: string): number => {
     let tot = 0; const seen = new Set<string>(); const stack = [pid];
     while (stack.length) {

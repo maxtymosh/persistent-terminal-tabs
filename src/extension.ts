@@ -1,7 +1,7 @@
 import { isAgentWorking } from './working-status';
 import { dockBesideTerminal, hasExistingPttState, initializeViewLocation } from './view-location';
 import { AgentStatus, UNKNOWN_STATUS } from './agent-status';
-import { configureCodexHistory, refreshCodexThreads } from './codex-history';
+import { configureCodexHistory, matchCodexScreen, refreshCodexThreads } from './codex-history';
 import * as vscode from 'vscode';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { StateStore, StateData, NEW_GROUP, SessionMeta, AgentKind, workspaceSlug, rememberCodexLink, rememberGrokLink, rememberAgyLink, agentDisplayName } from './state';
 import { TabsTree, Node, Arrange } from './tree';
-import { tmuxAvailable, tmuxLaunch, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessions, attachedClientSessions, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
+import { tmuxAvailable, tmuxLaunch, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessions, listSessionsAsync, attachedClientSessions, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
 import { friendlyProject, discoverSessions, transcriptCwd, transcriptCwds } from './sessions';
 import { recordHistory, readHistory, historyPath, HistoryEvent } from './history';
 import { generateRecap, Recap, RecapOptions, RecapSource, transcriptMtime, grokSessionIdFromFile, agySessionIdFromFile } from './recaps';
@@ -161,6 +161,9 @@ let attachedIds = new Set<string>();
 /** Blue is a current agent-reported state, never inferred from changing terminal pixels. */
 let workingSet = new Set<string>();
 let agentStatuses = new Map<string, AgentStatus>();
+let sessionSnapshot: TmuxSessionInfo[] = [];
+let snapshotGeneration = 0;
+let alivePolling: Promise<boolean> | undefined;
 
 function workingCfg(): { on: boolean; pollMs: number } {
   return {
@@ -177,14 +180,27 @@ function isWorkingCached(id: string): boolean {
 /** Re-read the live tmux set AND the 🔵 working set; returns whether a DOT would change (alive set, or working
  *  set) so the timer only re-renders when it matters. */
 function refreshAlive(): boolean {
-  let next: Set<string>;
-  let attached: Set<string>;
-  let sessions: TmuxSessionInfo[];
-  try {
-    sessions = listSessions();
-    next = new Set(sessions.map(s => s.id));
-    attached = new Set(sessions.filter(s => s.attached).map(s => s.id));
-  } catch { return false; }
+  ++snapshotGeneration; // explicit actions supersede any older in-flight async read
+  try { return applySessionSnapshot(listSessions()); }
+  catch { return false; }
+}
+
+/** One in-flight snapshot for clicks, catch-ups and timer ticks. Never block the extension host on a child. */
+function pollAlive(): Promise<boolean> {
+  if (shuttingDown || !useTmux) return Promise.resolve(false);
+  if (alivePolling) return alivePolling;
+  const generation = snapshotGeneration;
+  alivePolling = listSessionsAsync().then(sessions => {
+    if (shuttingDown || generation !== snapshotGeneration) return false;
+    return applySessionSnapshot(sessions);
+  }).catch(() => false).finally(() => { alivePolling = undefined; });
+  return alivePolling;
+}
+
+function applySessionSnapshot(sessions: TmuxSessionInfo[]): boolean {
+  sessionSnapshot = sessions;
+  const next = new Set(sessions.map(s => s.id));
+  const attached = new Set(sessions.filter(s => s.attached).map(s => s.id));
   const attachedChanged = attached.size !== attachedIds.size || [...attached].some(id => !attachedIds.has(id));
   attachedIds = attached;
   const aliveChanged = next.size !== aliveIds.size || [...next].some((x) => !aliveIds.has(x));
@@ -210,10 +226,11 @@ let pokePending = false;
 function pokeDots(): void {
   if (pokePending) return;
   pokePending = true;
-  setTimeout(() => {
-    pokePending = false;
-    refreshAlive();
-    tree?.refresh(); // unconditional: the click's own render may have raced this sweep
+  setTimeout(async () => {
+    try {
+      await pollAlive();
+      if (!shuttingDown) tree?.refresh(); // unconditional: the click's own render may have raced this sweep
+    } finally { pokePending = false; }
   }, 0);
 }
 
@@ -228,9 +245,9 @@ function codexIdFromTranscript(file: string | undefined): string | undefined {
  * if Max never pressed ✨. Only previously-unbound, foreground-Codex panes are inspected, keeping the lsof work
  * small. Default "chat N" tabs get one silent recap immediately so the recovered row becomes recognizable.
  */
-function bindLiveCodexSessions(): boolean {
+function bindLiveCodexSessions(background = false): boolean {
   if (!useTmux) return false;
-  const candidates = listSessions().filter((s) => /\bcodex\b/i.test(s.command));
+  const candidates = sessionSnapshot.filter((s) => s.agentCommand === 'codex' || /\bcodex\b/i.test(s.command));
   const newlyBound: string[] = [];
   for (const session of candidates) {
     // tmux session names carry PTT's short eight-character prefix; state keeps the full UUID.
@@ -238,8 +255,9 @@ function bindLiveCodexSessions(): boolean {
     if (!id) continue;
     const meta = store.meta(id);
     if (!meta) continue;
-    const observed = liveCodexThreadId(session.id);
-    const codexSessionId = observed ?? (!meta.codexSessionId ? codexIdFromTranscript(liveCodexTranscript(session.id)) : undefined);
+    // OSC title is already in the shared snapshot. Background ticks must not recapture every pane or run lsof.
+    const observed = background ? matchCodexScreen('', undefined, session.title)?.id : liveCodexThreadId(session.id);
+    const codexSessionId = observed ?? (!background && !meta.codexSessionId ? codexIdFromTranscript(liveCodexTranscript(session.id)) : undefined);
     if (codexSessionId === meta.codexSessionId) continue;
     if (!codexSessionId) continue;
     meta.codexSessionId = codexSessionId;
@@ -265,7 +283,7 @@ function bindLiveCodexSessions(): boolean {
  */
 function bindLiveGrokSessions(): boolean {
   if (!useTmux) return false;
-  const candidates = listSessions().filter((s) => /\bgrok\b/i.test(s.command));
+  const candidates = sessionSnapshot.filter((s) => /\bgrok\b/i.test(s.command));
   const newlyBound: string[] = [];
   for (const session of candidates) {
     const id = store.allIds().find((saved) => saved.startsWith(session.id));
@@ -292,7 +310,7 @@ function bindLiveGrokSessions(): boolean {
 
 function bindLiveAgySessions(): boolean {
   if (!useTmux) return false;
-  const candidates = listSessions().filter((s) => /\bagy\b/i.test(s.command));
+  const candidates = sessionSnapshot.filter((s) => /\bagy\b/i.test(s.command));
   const newlyBound: string[] = [];
   for (const session of candidates) {
     const id = store.allIds().find((saved) => saved.startsWith(session.id));
@@ -317,8 +335,10 @@ function bindLiveAgySessions(): boolean {
   return true;
 }
 
-function bindLiveForeignSessions(): boolean {
-  const codex = bindLiveCodexSessions();
+function bindLiveForeignSessions(background = false): boolean {
+  const codex = bindLiveCodexSessions(background);
+  // Legacy Grok/Antigravity fd discovery stays on explicit/startup paths, never in the high-frequency tick.
+  if (background) return codex;
   const grok = bindLiveGrokSessions();
   const agy = bindLiveAgySessions();
   return codex || grok || agy;
@@ -1474,6 +1494,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const wsKey = workspaceKey();
   store = StateStore.forWorkspace(wsKey);
   shuttingDown = false;
+  ++snapshotGeneration;
   useTmux = cfg('useTmux', true) && tmuxAvailable();
   configureCodexHistory(cfg('codexCommand', 'codex'));
   await refreshCodexThreads().catch(() => log('Codex history API unavailable; legacy transcript lookup remains enabled'));
@@ -1688,15 +1709,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // — the 🔵 working dot — an agent starting or finishing a turn): re-poll on the `workingPollSeconds` cadence
     // (default 8s; was a hardcoded 15s) and re-render only when a dot would actually change. refreshAlive() now
     // also reports a change when only the working set moved.
-    let dotPolling = false;
+    let historyPolling = false;
     const dotTimer = setInterval(async () => {
-      if (refreshAlive()) tree?.refresh();
-      if (dotPolling) return;
-      dotPolling = true;
+      if (shuttingDown) return;
+      if (await pollAlive() && !shuttingDown) tree?.refresh();
+      // Slow history metadata must not hold up later live-status snapshots.
+      if (historyPolling || shuttingDown) return;
+      historyPolling = true;
       try {
         await refreshCodexThreads().catch(() => undefined);
-        if (!shuttingDown && bindLiveForeignSessions()) tree?.refresh();
-      } finally { dotPolling = false; }
+        if (!shuttingDown && bindLiveForeignSessions(true)) tree?.refresh();
+      } finally { historyPolling = false; }
     }, Math.min(60, Math.max(3, cfg('workingPollSeconds', 8))) * 1000);
     context.subscriptions.push({ dispose: () => clearInterval(dotTimer) });
     // STARTUP CATCH-UP. The activate-time tmux query can come back EMPTY (the server isn't reachable from the
@@ -1708,8 +1731,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // paint raced the view becoming ready (or VS Code restored a stale pre-reload render of the rows), the dots
     // would stay ⚪ forever with no re-render to correct them. Forcing a few repaints over the first seconds — once
     // the view is definitely live — repaints alive rows 🟡. Cheap (getTreeItem only recomputes visible rows).
-    for (const ms of [400, 1200, 3000]) setTimeout(() => {
-      refreshAlive();
+    for (const ms of [400, 1200, 3000]) setTimeout(async () => {
+      await pollAlive();
+      if (shuttingDown) return;
       tree?.refresh();
       if (ms === 3000) diag(`catch-up@3000ms live=${aliveIds.size}`);
     }, ms);
