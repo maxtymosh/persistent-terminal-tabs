@@ -3,7 +3,7 @@
 ## Nov 6, 2026 — blank Uncombine icon
 
 - Fixed the unsupported `ungroup` icon name in the Uncombine action; use VS Code's built-in `multiple-windows` glyph. Verified the installed registry and visually inspected a render made with VS Code's actual font.
-- All 55 tests pass; packaged and installed 1.5.2 with manifest/runtime parity. Public release verification is recorded in public-release.md. No window reload or live user-terminal operation performed.
+- All 55 tests pass; packaged and installed 1.5.2 with manifest/runtime parity. Published latest public 1.5.2 from 8fb41eb; all four anonymous downloads, public manifest icon, nested VSIX and bundled checksums verified. No window reload or live user-terminal operation performed.
 
 ## Nov 6, 2026 — new-user terminal docking
 

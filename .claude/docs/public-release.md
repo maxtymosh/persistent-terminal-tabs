@@ -2,10 +2,11 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.5.2 — Uncombine icon repair, November 6, 2026
+## 1.5.2 — published November 6, 2026
 
 - Max's screenshot revealed an empty Uncombine button. The manifest used `ungroup`, which does not exist in VS Code's icon registry. Replaced it with `multiple-windows` (glyph U+EB23), verified in the installed workbench and rendered/visually inspected using its actual codicon.ttf font.
-- All 55 tests pass. Packaged and installed 1.5.2; verified both manifests contain the replacement and all 18 packaged/installed runtime modules match compiled output. No terminal state, layout or activation changed. Public 1.5.2 upload verification follows below; Marketplace retains the publisher authentication blocker.
+- All 55 tests pass. Packaged and installed 1.5.2; verified both manifests contain the replacement and all 18 packaged/installed runtime modules match compiled output. No terminal state, layout or activation changed. Marketplace retains the publisher authentication blocker.
+- Latest public release: https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.2, targeting 8fb41eb5aa4c64c82fe9bfe80e65cdb66f74cd07 on origin/main. All four anonymous downloads matched local assets; verified replacement icon in the public manifest, nested VSIX and every bundled checksum. All uploaded digests matched GitHub's API.
 
 ## 1.5.1 — published November 6, 2026
 
