@@ -2,7 +2,7 @@
   "name": "persistent-terminal-tabs",
   "displayName": "Persistent Terminal Tabs",
   "description": "Keep Claude and Codex terminal chats organized in saved groups. Reconnect to live sessions after reopening VS Code with tmux.",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "publisher": "maxtymosh",
   "author": "Max Tymoshyn",
   "license": "MIT",
@@ -127,7 +127,7 @@
       {
         "command": "terminalTabs.uncombineGroup",
         "title": "Persistent Terminal Tabs: Uncombine Group into Separate Tabs",
-        "icon": "$(ungroup)"
+        "icon": "$(multiple-windows)"
       },
       {
         "command": "terminalTabs.renameTab",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2 — November 6, 2026
+
+- Fix the blank Uncombine Group button by replacing the nonexistent `ungroup` icon with the built-in `multiple-windows` icon.
+
 ## 1.5.1 — November 6, 2026
 
 - New installs dock Sessions beside the terminals inside the Terminal panel on first activation.

@@ -2,6 +2,11 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
+## 1.5.2 — Uncombine icon repair, November 6, 2026
+
+- Max's screenshot revealed an empty Uncombine button. The manifest used `ungroup`, which does not exist in VS Code's icon registry. Replaced it with `multiple-windows` (glyph U+EB23), verified in the installed workbench and rendered/visually inspected using its actual codicon.ttf font.
+- All 55 tests pass. Packaged and installed 1.5.2; verified both manifests contain the replacement and all 18 packaged/installed runtime modules match compiled output. No terminal state, layout or activation changed. Public 1.5.2 upload verification follows below; Marketplace retains the publisher authentication blocker.
+
 ## 1.5.1 — published November 6, 2026
 
 - Max requested that new installs start with Sessions beside the native terminal view inside the Terminal panel, as in his screenshot. Added once-per-profile native docking, legacy-state preservation, an explicit docking command and a location-independent view-focus shortcut.
