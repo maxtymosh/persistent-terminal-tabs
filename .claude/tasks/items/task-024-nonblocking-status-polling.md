@@ -18,7 +18,7 @@ issue: null
 - [x] 50-open-chat activation fixture and 50/100-chat probe fixtures pass. Child probe count remains 2 per status read; concurrent clicks/ticks share a read.
 - [x] Reject stale reads after explicit refresh and deactivation; no post-shutdown poll. Preserve existing user terminals and saved metadata.
 - [x] Compile and 59-check acceptance verified under Node 22.22.2. Earlier full runs passed all 59; final parallel/serial runs passed 58, with the unchanged 600 ms provider-timeout fixture passing separately under extreme system load. No unrelated test timing was changed.
-- Package/install/public release: evidence in public-release.md; live activation remains a separate user restart action.
+- [x] Package/install/public release: all 18 runtime modules match compiled output. Latest public 1.5.3 targets 8c3a967; all four anonymous downloads and nested checksums verified. See public-release.md. Live activation remains a separate user restart action.
 
 ## Boundaries and limitations
 
@@ -38,4 +38,6 @@ Audited origin/main 70bc4ff, recent authors/history, PRs and shared claims: no e
 
 Task-owned worktree ID `ptt-lag-20261107`, branch `fix/nonblocking-status-polling`, base 70bc4ff. Created after Max's updated instructions required task-local checkouts; migrated only this task's edits with byte-for-byte verification, leaving the canonical checkout's unrelated legacy artifacts intact. Lifecycle JSON is stored in the common Git directory under `norml/worktrees/ptt-lag-20261107.json`.
 
-Readiness: implementation and 59-test acceptance passed; integration/package/public release and removal are recorded before final handoff. Preserve source, release assets and measurements outside the temporary checkout before normal retirement. No PR queue is configured.
+Merge verified: implementation 3dc8de6 and release 8c3a967 integrated on origin/main. Installed runtime and anonymous public artifacts verified. Source remains on main and the retained feature branch. Tests, benchmark and release assets are retained in the common Git directory under norml/worktrees/ptt-lag-artifacts, outside the temporary checkout. No PR queue is configured.
+
+Retirement: this task owns the checkout; its sole node_modules link points outward to canonical dependencies, and out/ is generated from the published source. No service was launched from it. Final process/ignored-file gates and the separate verified removal event are retained in norml/worktrees/ptt-lag-20261107.json; mandatory closeout checker runs after normal removal. The feature branch remains retained.

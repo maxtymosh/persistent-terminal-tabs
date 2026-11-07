@@ -5,7 +5,7 @@
 - Replaced repeated blocking background tmux/process reads with one shared async snapshot; click refresh and startup catch-ups use the same in-flight read. Guard stale/shutdown results and keep slow history metadata independent from status polling.
 - Background Codex binding reuses cached native titles. Legacy Grok/Antigravity fd discovery stays on startup/explicit recap paths; saved identities and all native status interpretation remain intact.
 - 50-open/73-sleeping activation and 50/100-session probe fixtures verified. Measured local 10-session event-loop delay fell from 224 ms to 1 ms. Compile and 59-check acceptance verified; final full runs passed 58 and the unchanged provider-timeout check passed alone under extreme host contention.
-- Packaged and installed 1.5.3 without restarting VS Code or closing user chats. Public release and temporary worktree closeout recorded in public-release.md and TASK-024.
+- Packaged and installed 1.5.3 without restarting VS Code or closing user chats. Latest public GitHub 1.5.3 targets 8c3a967. All four anonymous downloads, nested VSIX/checksums and GitHub digests verified. Source pushed to origin/main; temporary worktree closeout is linked from TASK-024.
 
 ## Nov 6, 2026 — blank Uncombine icon
 

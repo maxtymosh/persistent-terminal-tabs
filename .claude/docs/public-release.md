@@ -2,12 +2,12 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.5.3 — prepared November 7, 2026
+## 1.5.3 — published November 7, 2026
 
 - Max reports lag with a normal workload of 50 open chats. Background status checks previously took four synchronous tmux/process snapshots per tick; they now share one bounded asynchronous read, including concurrent clicks/catch-ups. Background Codex identity matching reuses the native title. Legacy Grok/Antigravity fd discovery stays on startup/explicit recap paths.
 - Controlled fixtures cover 50 open chats plus 73 sleeping records, and 50/100-session status reads with exactly two child probes. A local live-10-session comparison reduced event-loop delay from 224 ms to 1 ms (225 ms versus 56 ms total read time). This is not a measured 50-live-agent benchmark or a claim to resolve all machine contention.
 - Compile and 59-check acceptance verified with Node 22.22.2. Earlier full runs passed; final parallel and serial runs passed 58/59 under extreme system load. The unchanged provider-timeout fixture passed in isolation; its 600 ms subprocess budget was not widened. Evidence retained in the common Git directory under norml/worktrees/ptt-lag-artifacts.
-- Packaged and installed 1.5.3. All 18 VSIX runtime modules match final compiled output. No live chat was closed or window/extension host restarted. Installed-runtime parity and public downloads are verified before final handoff. Marketplace retains the Microsoft publisher authentication blocker.
+- Packaged and installed 1.5.3. All 18 VSIX runtime modules match final compiled output. No live chat was closed or window/extension host restarted. All 18 installed runtime modules also match. Published latest release https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.3 targeting 8c3a96732321af23c4e8da53758566356d5a99e4 on origin/main. All four anonymous downloads matched local files, all GitHub asset digests matched and the nested VSIX/checksums passed verification. Marketplace retains the Microsoft publisher authentication blocker.
 
 ## 1.5.2 — published November 6, 2026
 
