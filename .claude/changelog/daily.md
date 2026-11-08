@@ -4,7 +4,7 @@
 
 - 1.5.3 was verified loaded, but Max reported persistent lag and grey/color flicker. Removed the remaining blocking startup/diagnostic/status consumers and client adoption. History metadata no longer gates panel startup; automatic legacy fd discovery is removed from startup as well as ticks.
 - Async probes allow eight seconds and emit failure diagnostics. Transport errors retain last observed attachment but clear work to unknown; cleanup skips failed evidence and unavailable adoption evidence cannot close existing terminals.
-- Fourteen targeted checks pass. Full serial suite passes 60/61 plus the unchanged timeout fixture separately under contention. Six reads of 29 real live sessions take 106–116 ms, all known; loaded/UI/public verification follows in public-release.md.
+- Fourteen targeted checks pass. Full serial suite passes 60/61 plus the unchanged timeout fixture separately under contention. Six reads of 29 real live sessions take 106–116 ms, all known; native Restart Extensions loaded 1.5.4 at 00:28:43 UTC and adopted 26 attachments. A real 2112 ms read kept all 28 states known. Final-baseline pane PIDs retained; earlier unattributed pane change remains recorded. Latest GitHub 1.5.4 and all four anonymous assets/nested checksums verified.
 
 ## Nov 7, 2026 — polling at 50 open chats
 

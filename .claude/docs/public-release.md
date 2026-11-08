@@ -2,11 +2,11 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.5.4 — prepared November 7, 2026
+## 1.5.4 — published November 7, 2026
 
 - The live 1.5.3 follow-up reopens TASK-024. Source f2c7732 removes remaining synchronous extension status/client reads and automatic fd discovery, decouples history startup, tolerates asynchronous scheduling pressure and logs failed probes. Failed transport no longer implies stopped chats; unavailable client evidence cannot trigger startup terminal disposal.
 - Fourteen targeted checks pass, including 50-open activation and native transition/retention fixtures. Full serial suite passes 60/61 under contention; the unchanged 600 ms provider-timeout fixture passes separately. Six fresh native reads with 29 live sessions took 106–116 ms each, with zero unknown states or probe failures. These are healthy-interval measurements, not proof that all reported system lag is resolved.
-- Package, loaded-runtime and public-download evidence is recorded after verification. Marketplace retains its authentication blocker.
+- Packaged and installed runtime matches all 18 final modules. Native Restart Extensions loaded 1.5.4 at 2026-11-08 00:28:43 UTC, with 26 existing terminal attachments adopted. A live 2112 ms read resolved unknown=0. All 28 pane-root PIDs from the immediately-pre-apply baseline remain; one earlier pane/saved record disappeared during ongoing interaction before applying this update, with actor/cause unverified. No task command killed a session or forced a window reload. Latest public https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.4 targets 32cf3d418b818fcd91d8919528e0bbece7bd9058 on origin/main; all four anonymous downloads, uploaded SHA-256 digests and nested VSIX/checksums match. Marketplace retains its authentication blocker.
 
 ## 1.5.3 — published November 7, 2026
 
