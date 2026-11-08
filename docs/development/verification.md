@@ -29,3 +29,7 @@ Project instructions and contributing guide point to one canonical CI/CD/publica
 ## Ownership and retention
 
 Audited origin/main, PRs and claims before editing. Task-local branch/worktree owns this change; unrelated legacy ZIP/checksum files and the retained Marketplace task are untouched. No other chat is messaged or operated. Required logs, candidate provenance and lifecycle evidence are preserved outside the temporary checkout under common Git norml/worktrees/ptt-quality-pipeline-artifacts. The normal worktree removal/checker must follow integration. No CI runner or service consumes this checkout.
+
+## GitHub bootstrap observation
+
+The first actual PR CI run (42458193435, candidate 98d2a8c) passed the complete Quality workflow on a disposable public runner, including all 71 checks and candidate package verification/upload. Main ruleset 26789904 was created and read back active, requiring PR and up-to-date Quality from GitHub Actions app 15368, with no bypass actors and zero mandatory human approvals. This final metadata source still requires fresh successful CI and guarded merge before delivery. Subsequent transient CI/main and removal receipts are preserved in the durable task artifact home; do not claim a different source was tested from this first run.

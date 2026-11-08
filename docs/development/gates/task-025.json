@@ -5,55 +5,55 @@
   "reviewer": "Codex owning-session dev-code-review self-review for Max Tymoshyn",
   "verdict": "Ship",
   "baseRevision": "806fa4bc6685c548c3f3471697a9e9c5abdd7355",
-  "sourceSha256": "146fa7310a2795b9b50650924461a86b51bd570220386c6cb46f5ce86d24d098",
+  "sourceSha256": "0d13cde2b4043acbe18cb9bdf6d6de3edf6cca26583276944c10e653d92b6cdf",
   "checks": {
     "review": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/verification.md",
-        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+        "sha256": "491789533197f60bcb02c10621cb48aa43e6762363afdc5f12f75b306afa5bc8"
       }
     },
     "tests": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/verification.md",
-        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+        "sha256": "491789533197f60bcb02c10621cb48aa43e6762363afdc5f12f75b306afa5bc8"
       }
     },
     "behavior": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/verification.md",
-        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+        "sha256": "491789533197f60bcb02c10621cb48aa43e6762363afdc5f12f75b306afa5bc8"
       }
     },
     "dependencyAudit": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/verification.md",
-        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+        "sha256": "491789533197f60bcb02c10621cb48aa43e6762363afdc5f12f75b306afa5bc8"
       }
     },
     "maps": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/verification.md",
-        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+        "sha256": "491789533197f60bcb02c10621cb48aa43e6762363afdc5f12f75b306afa5bc8"
       }
     },
     "ownership": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/verification.md",
-        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+        "sha256": "491789533197f60bcb02c10621cb48aa43e6762363afdc5f12f75b306afa5bc8"
       }
     },
     "acceptance": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/verification.md",
-        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+        "sha256": "491789533197f60bcb02c10621cb48aa43e6762363afdc5f12f75b306afa5bc8"
       }
     }
   },

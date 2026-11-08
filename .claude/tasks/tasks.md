@@ -62,7 +62,7 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
-- [ ] [P1] [TASK-025] [Apply MoonPress engineering and QA practices](items/task-025-development-quality-pipeline.md) — required CI, lint, dependency audit, exact-source admission, VSIX provenance and separate native QA.
+- [x] [P1] [TASK-025] [Apply MoonPress engineering and QA practices](items/task-025-development-quality-pipeline.md) — required CI, lint, dependency audit, exact-source admission, VSIX provenance and separate native QA.
 
 
 - [ ] [P1] [TASK-024] [Remove blocking status polling](items/task-024-nonblocking-status-polling.md) — measured background stalls, async shared snapshot, 50/100-chat scale checks. Install/public release and worktree closeout evidence live in the task and release record.
