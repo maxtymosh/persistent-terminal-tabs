@@ -599,37 +599,6 @@ function newChatInGroup(node?: Node): Promise<void> {
   return newChat(cfg<AgentKind>('defaultAgent', 'claude'), target);
 }
 
-async function addSession(): Promise<void> {
-  const open = new Set(store.allIds());
-  const picks = discoverSessions()
-    .filter((s) => !open.has(s.id))
-    .sort((a, b) => b.mtimeMs - a.mtimeMs)
-    .slice(0, 300)
-    .map((s) => ({
-      label: `${friendlyProject(s.cwd)} · ${s.title}`,
-      description: s.id.slice(0, 8),
-      detail: s.cwd,
-      sid: s.id,
-      meta: { title: s.title, project: s.project, cwd: s.cwd } as SessionMeta,
-    }));
-  const pick = await vscode.window.showQuickPick(picks, {
-    placeHolder: 'Add an existing Claude session as a tab',
-    matchOnDescription: true,
-    matchOnDetail: true,
-  });
-  if (!pick) return;
-  const group = currentGroup();
-  store.add(pick.sid, pick.meta, group);
-  reconcileAutoNames();
-  store.save();
-  const finalGroup = store.groupOf(pick.sid)?.name ?? group;
-  pruneDeadTerminals();
-  openTerminal(pick.sid, pick.meta, true); // open just this one (splits into the group's live split, or standalone)
-  terminalFor(pick.sid)?.show();
-  tree?.refresh();
-  log(`+ added existing ${pick.sid.slice(0, 8)} · ${friendlyProject(pick.meta.cwd)} → ${finalGroup}`);
-}
-
 async function newGroup(): Promise<void> {
   const project = await chooseProject();
   if (!project) return;
@@ -672,33 +641,7 @@ function groupIndex(name: string): number {
 }
 
 /**
- * NATIVE ORDER FIX. VS Code can only *append* new terminals — there's no API to insert or reorder a
- * native tab — so to honor a panel reorder/insert we recreate the strip from the first changed group
- * to the end, in panel order. Groups BEFORE startIndex keep their existing (already-correct) native
- * tabs; everything from there down is disposed (untracked first → no drop) and rebuilt, so native
- * order == panel order. tmux makes the recreate lossless (detach → reattach). Cheaper than a full
- * renderAll when the change is near the bottom; equal to it at startIndex 0.
- */
-function rerenderFrom(startIndex: number): void {
-  const tail = store.groups.slice(Math.max(0, startIndex));
-  const names = new Set(tail.map((g) => g.name));
-  for (const [t, id] of [...liveTerminals]) {
-    const g = store.groupOf(id)?.name;
-    if (g && names.has(g)) { liveTerminals.delete(t); t.dispose(); } // untrack first -> no drop
-  }
-  for (const g of tail) {
-    for (const id of g.sessionIds) {
-      if (!isOpen(id)) {
-        openTerminal(id, store.meta(id) ?? { title: id.slice(0, 8), project: '', cwd: '' }, true);
-      }
-    }
-  }
-  tree?.refresh();
-  log(`⟳ re-rendered from group #${Math.max(0, startIndex)} (${tail.length} group(s); native order = panel)`);
-}
-
-/**
- * Like rerenderFrom, but re-creates ONLY currently-open terminals (closed/lazy tabs are left closed — no
+ * Re-creates ONLY currently-open terminals (closed/lazy tabs are left closed — no
  * stampede, the lazy-start contract). Used by the drag paths: reordering must never wake 40 sleeping sessions.
  * `alsoOpen` forces a few ids open even if currently closed (the moved tab in a front-insert fallback). Native
  * order among the open tabs == panel order, because we recreate in store order.
@@ -1170,7 +1113,7 @@ function showHistory(): void {
 function indexAllSlices(): Map<string, { title: string; group: string; slug: string }> {
   const m = new Map<string, { title: string; group: string; slug: string }>();
   const dir = path.join(os.homedir(), '.terminal-tabs', 'workspaces');
-  let files: string[] = [];
+  let files: string[];
   try { files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')); } catch { return m; }
   for (const f of files) {
     try {
