@@ -2,6 +2,14 @@
 
 > Updated: Nov 7, 2026
 
+## Opening chats — 1.5.5
+
+- `[DECISION]` A cached-live tmux chat uses attach-session directly with a local home cwd. The running session owns its conversation/cwd; reconnecting never scans cold history, rewrites resume rc/config, or creates a replacement. A nonzero process exit from attach retains saved metadata, including with closeToDrop enabled, and refreshes live evidence. Cold restoration retains its existing behavior.
+- Ordinary opens retain all separate native terminal objects. Split opens retain the correctly ordered contiguous creation prefix and reconstruct only the necessary suffix. Explicit Combine still rebuilds deliberately; the public VS Code API does not expose manual native split arrangements. Group confirmation counts actual missing panes for ordinary open.
+- Automatic recaps yield before history checks and serialize providers globally. Cached agent evidence plus established exact foreign IDs choose the transcript; unbound foreign sessions defer discovery to manual recap. Queued work rejects shutdown, changed stores and deleted records. Manual recap remains available.
+- Verification uses 50 small in-memory terminal mocks, not 50 OS terminals, tmux sessions or agent processes. Baseline separate-middle/group-tail opening recreated 50 terminal objects and disposed 49; repaired behavior creates one and disposes zero. Inserting into a split retains the first 25 and rebuilds only the tail. No real load simulation was started on Max's laptop.
+- A separate live system incident was traced by exact glob to ms-python.vscode-python-envs 1.42.0. Hundreds of concurrent Python discovery rg children consumed about ten cores. Native Disable (Workspace) plus Restart Extensions stopped the burst; read-only checks then found zero rg workers. This is a workspace incident mitigation, not a PTT code change or proof that every source of lag is gone. PTT autoRecapOnOpen is temporarily false in Work Root; manual recap remains usable.
+
 ## Nonblocking status polling — 1.5.3
 
 - `[DECISION]` Dot timer, click refresh and startup catch-up snapshots use asynchronous tmux/ps probes (2-second per-child timeout, 8 MiB output cap), with one in-flight read shared across those callers. Explicit synchronous diagnostics remain available. Both paths share the same native foreground/process-birth/state interpretation; do not replace evidence with activity/CPU guesses.

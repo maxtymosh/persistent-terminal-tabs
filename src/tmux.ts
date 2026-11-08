@@ -278,6 +278,12 @@ export function tmuxLaunch(
   };
 }
 
+/** A confirmed live chat only needs a client. Never scan history, rewrite config or create a replacement. */
+export function tmuxAttach(id: string): { shellPath: string; shellArgs: string[] } | null {
+  const tmux = tmuxPath();
+  return tmux ? { shellPath: tmux, shellArgs: [...socketArgs(), 'attach-session', '-t', sessionName(id)] } : null;
+}
+
 /** Best-effort exact rollout lookup under ~/.codex/sessions. */
 function codexSessionFile(id: string): string | undefined {
   const root = path.join(os.homedir(), '.codex', 'sessions');

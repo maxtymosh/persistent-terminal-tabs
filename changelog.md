@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.5 — November 7, 2026
+
+- Reattach live tmux chats directly, bypassing cold transcript discovery and configuration rewrites. Retain the saved chat if attachment races with a stopped server.
+- Preserve existing separate terminals and the ordered split prefix when opening missing chats. Opening one missing group pane no longer rebuilds every pane.
+- Queue automatic AI recaps one at a time after the open handler yields. Use established conversation identities without synchronous process discovery; ignore late results after shutdown.
+
 ## 1.5.4 — November 7, 2026
 
 - Make startup status/client adoption, diagnostics, session reports and automatic suspension scans asynchronous; reuse cached diagnostic snapshots.

@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { StateStore, StateData, NEW_GROUP, SessionMeta, AgentKind, workspaceSlug, rememberCodexLink, rememberGrokLink, rememberAgyLink, agentDisplayName } from './state';
 import { TabsTree, Node, Arrange } from './tree';
-import { tmuxAvailable, tmuxLaunch, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessionsAsync, attachedClientSessionsAsync, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
+import { tmuxAvailable, tmuxLaunch, tmuxAttach, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessionsAsync, attachedClientSessionsAsync, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
 import { friendlyProject, discoverSessions, transcriptCwd, transcriptCwds } from './sessions';
 import { recordHistory, readHistory, historyPath, HistoryEvent } from './history';
 import { generateRecap, Recap, RecapOptions, RecapSource, transcriptMtime, grokSessionIdFromFile, agySessionIdFromFile } from './recaps';
@@ -30,6 +30,7 @@ let tree: TabsTree;
 let out: vscode.OutputChannel;
 let shuttingDown = false;
 let counter = 0;
+const attachOnlyTerminals = new WeakSet<vscode.Terminal>();
 const liveTerminals = new Map<vscode.Terminal, string>();          // terminal -> session id
 const pendingDrops = new Map<string, ReturnType<typeof setTimeout>>(); // id -> debounce timer
 const STARTUP_GRACE_MS = 1500;
@@ -491,6 +492,25 @@ function resolveLaunchCwd(id: string, storedCwd: string, kind: AgentKind): { cwd
 
 function openTerminal(id: string, meta: SessionMeta, restored: boolean): vscode.Terminal {
   const group = store.groupOf(id)?.name ?? NEW_GROUP;
+  const title = meta.title || id.slice(0, 8);
+  const label = `${agentDisplayName(meta)} · ${title}`;
+  const opts: vscode.TerminalOptions = {
+    name: label.length > 46 ? label.slice(0, 45) + '…' : label,
+    isTransient: true,
+    cwd: os.homedir(),
+  };
+  const anchor = anchorFor(group);
+  if (anchor) opts.location = { parentTerminal: anchor };
+  const attachment = useTmux && sessionAliveCached(id) ? tmuxAttach(id) : null;
+  if (attachment) {
+    // The running shell owns its cwd/conversation. Reattachment must not read cold history or touch a Drive cwd.
+    opts.shellPath = attachment.shellPath;
+    opts.shellArgs = attachment.shellArgs;
+    const terminal = vscode.window.createTerminal(opts);
+    liveTerminals.set(terminal, id);
+    attachOnlyTerminals.add(terminal);
+    return terminal;
+  }
   // `agent` remains the original tab recipe for compatibility, but a captured Codex/Grok session is authoritative
   // for recovery. This is what makes a legacy Claude-labelled shell reopen its real conversation after Cmd+R.
   const agySessionId = meta.agySessionId ?? (meta.recapAgent === 'agy' ? meta.recapSessionId : undefined);
@@ -502,16 +522,7 @@ function openTerminal(id: string, meta: SessionMeta, restored: boolean): vscode.
   // actual folder the session runs in — not a stale/default cwd cached at import (the ".claude" Max saw).
   const { cwd: realCwd, orphaned, recordedCwd } = resolveLaunchCwd(id, meta.cwd, kind);
   if (!orphaned && realCwd !== meta.cwd) { meta.cwd = realCwd; store.save(); } // self-heal a moved slice cwd
-  const title = meta.title || id.slice(0, 8);
-  // auto-name by the folder it runs in: "{folder} · {title}" (like Manage Terminals)
-  const label = `${agentDisplayName(meta)} · ${title}`;
-  const opts: vscode.TerminalOptions = {
-    name: label.length > 46 ? label.slice(0, 45) + '…' : label,
-    isTransient: true,
-    cwd: realCwd,
-  };
-  const anchor = anchorFor(group);
-  if (anchor) opts.location = { parentTerminal: anchor }; // panel: split into the group's tab
+  opts.cwd = realCwd;
   // Auto-resume ONLY when a transcript actually exists; otherwise open a CLEAN shell (no auto-claude) so Max can
   // cd + run claude himself. This also keeps DATA-SAFETY: we NEVER auto `--session-id` (which could overwrite a
   // transcript) — a new session is pinned only when Max types `claude` (the wrapper picks --session-id vs --resume).
@@ -767,14 +778,11 @@ function openTab(node: Node): void {
   const panelIdx = g ? g.sessionIds.indexOf(node.id) : -1;
   const laterOpen = !!g && g.sessionIds.some((id, i) => i > panelIdx && isOpen(id));
   const metaOf = (id: string) => store.meta(id) ?? { title: id.slice(0, 8), project: '', cwd: '' };
-  if (!laterOpen) {
+  if (g?.layout === 'separate' || !laterOpen) {
     openTerminal(node.id, metaOf(node.id), true).show();
   } else {
-    const order = g!.sessionIds.filter((id) => id === node.id || isOpen(id)); // open chats + this one, in panel order
-    for (const [t, id] of [...liveTerminals]) {
-      if (order.includes(id)) { liveTerminals.delete(t); t.dispose(); }
-    }
-    for (const id of order) openTerminal(id, metaOf(id), true);
+    const order = g!.sessionIds.filter((id) => id === node.id || isOpen(id));
+    openSplitGroup(g!, order);
     terminalFor(node.id)?.show();
   }
   autoRecapOnOpen(node.id); // transcript grew since last recap? refresh it silently in the background (never on a manual title)
@@ -788,16 +796,25 @@ function openTab(node: Node): void {
  * open (untrack first → no drop; tmux makes the rebuild lossless) and reopens them in order so they
  * form a single contiguous split-tab. Other groups are left untouched.
  */
-/** All the group's chats open AND already ONE contiguous split (consecutive in creation/native order)? Then
- *  combining is a no-op (just focus). If they're open but SCATTERED as standalone tabs (the "I have to drag to
- *  trigger the split" symptom), this is false -> renderGroup re-lays them into one split. */
-function groupAlreadyCombined(g: { sessionIds: string[] }): boolean {
-  const open = g.sessionIds.filter(isOpen);
-  if (open.length === 0 || open.length !== g.sessionIds.length) return false; // some chat is closed
+/** Retain the correctly ordered, contiguous native prefix; append/rebuild only what follows the first gap. */
+function openSplitGroup(g: { sessionIds: string[] }, desired: string[], force = false): void {
   const liveOrder = [...liveTerminals.values()];
-  const positions = open.map((id) => liveOrder.indexOf(id)).sort((a, b) => a - b);
-  for (let i = 1; i < positions.length; i++) if (positions[i] !== positions[i - 1] + 1) return false; // scattered
-  return true; // consecutive in creation order == one native split
+  const opened = liveOrder.filter(id => g.sessionIds.includes(id));
+  const contiguous = opened.every((id, i) => i === 0 || liveOrder.indexOf(id) === liveOrder.indexOf(opened[i - 1]) + 1);
+  let retained = 0;
+  if (!force && contiguous) {
+    while (retained < opened.length && opened[retained] === desired[retained]) retained++;
+  }
+  const keep = new Set(opened.slice(0, retained));
+  for (const [terminal, id] of [...liveTerminals]) {
+    if (g.sessionIds.includes(id) && !keep.has(id)) {
+      liveTerminals.delete(terminal);
+      terminal.dispose();
+    }
+  }
+  for (const id of desired.slice(retained)) {
+    openTerminal(id, store.meta(id) ?? { title: id.slice(0, 8), project: '', cwd: '' }, true);
+  }
 }
 
 async function renderGroup(name: string, force = false): Promise<void> {
@@ -815,21 +832,19 @@ async function renderGroup(name: string, force = false): Promise<void> {
   // no API for true native split state — so it false-positives when a group's chats are open as SEPARATE tabs
   // (each opened individually is still contiguous in insertion order). An EXPLICIT Combine (`force`) must never
   // trust it, or it no-ops exactly when the user wants the merge ("nothing happens"). force → always re-lay.
-  if (!force && !separate && groupAlreadyCombined(g)) { terminalFor(g.sessionIds[0])?.show(); return; }
-  if (g.sessionIds.length > 12) {
+  const opening = force ? g.sessionIds.length : g.sessionIds.filter(id => !isOpen(id)).length;
+  if (opening > 12) {
     const go = await vscode.window.showWarningMessage(
-      `“${name}” has ${g.sessionIds.length} chats — open them all as ${separate ? 'separate tabs' : 'one split-tab'}?`, 'Open all', 'Cancel');
+      `“${name}” will open ${opening} chats — continue as ${separate ? 'separate tabs' : 'one split-tab'}?`, 'Open all', 'Cancel');
     if (go !== 'Open all') return;
   }
   if (!separate) {
-    g.layout = 'split';
-    store.save();
-    for (const [t, id] of [...liveTerminals]) {
-      if (g.sessionIds.includes(id)) { liveTerminals.delete(t); t.dispose(); }
+    if (g.layout !== 'split') { g.layout = 'split'; store.save(); }
+    openSplitGroup(g, g.sessionIds, force);
+  } else {
+    for (const id of g.sessionIds) {
+      if (!isOpen(id)) openTerminal(id, store.meta(id) ?? { title: id.slice(0, 8), project: '', cwd: '' }, true);
     }
-  }
-  for (const id of g.sessionIds) {
-    if (!isOpen(id)) openTerminal(id, store.meta(id) ?? { title: id.slice(0, 8), project: '', cwd: '' }, true);
   }
   terminalFor(g.sessionIds[0])?.show();
   tree?.refresh();
@@ -984,6 +999,26 @@ async function regenerateChat(node?: Node): Promise<void> {
 
 /** Ids currently being auto-recapped — so a rapid re-open (or the catch-up render) can't spawn a second claude. */
 const autoRecapping = new Set<string>();
+let autoRecapTail: Promise<void> = Promise.resolve();
+
+/** Automatic maintenance uses established identity only; expensive live discovery belongs to explicit recap. */
+function automaticRecapOptions(id: string, meta: SessionMeta): RecapOptions | undefined {
+  const live = sessionSnapshot.find(session => session.id === id.slice(0, 8))?.agentCommand;
+  const kind = live ?? (meta.agySessionId ? 'agy' : meta.grokSessionId ? 'grok' : meta.codexSessionId ? 'codex' : meta.recapAgent ?? meta.agent ?? 'claude');
+  if (kind === 'codex') {
+    const codexSessionId = meta.codexSessionId ?? (meta.recapAgent === 'codex' ? meta.recapSessionId : undefined);
+    return codexSessionId ? { cwd: meta.cwd, preferCodex: true, codexSessionId } : undefined;
+  }
+  if (kind === 'grok') {
+    const grokSessionId = meta.grokSessionId ?? (meta.recapAgent === 'grok' ? meta.recapSessionId : undefined);
+    return grokSessionId ? { cwd: meta.cwd, preferGrok: true, grokSessionId } : undefined;
+  }
+  if (kind === 'agy') {
+    const agySessionId = meta.agySessionId ?? (meta.recapAgent === 'agy' ? meta.recapSessionId : undefined);
+    return agySessionId ? { cwd: meta.cwd, preferAgy: true, agySessionId } : undefined;
+  }
+  return kind === 'claude' ? { cwd: meta.cwd } : undefined;
+}
 
 /**
  * AUTO-RECAP ON OPEN (silent). When a chat is opened and its transcript has GROWN since its last recap, refresh
@@ -995,18 +1030,25 @@ const autoRecapping = new Set<string>();
  */
 function autoRecapOnOpen(id: string): void {
   if (!cfg('autoRecapOnOpen', true) || !useTmux) return;
-  const meta = store.meta(id);
-  if (!meta || autoRecapping.has(id)) return;
-  const opts = recapOptions(id, meta);
-  if (transcriptMtime(id, opts) <= (meta.recapAt ?? 0)) return; // transcript hasn't grown since last recap → nothing to do
+  if (!store.meta(id) || autoRecapping.has(id)) return;
   autoRecapping.add(id);
-  void (async () => {
+  const queuedStore = store;
+  // One automatic provider globally, with a UI turn before even inspecting history. Opening many chats must
+  // not start dozens of CLI/MCP stacks or synchronously discover every foreign application from the click.
+  autoRecapTail = autoRecapTail.catch(() => undefined).then(async () => {
+    if (shuttingDown || store !== queuedStore) return;
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+    if (shuttingDown || store !== queuedStore) return;
+    const meta = store.meta(id);
+    if (!meta) return;
+    const opts = automaticRecapOptions(id, meta);
+    if (!opts || transcriptMtime(id, opts) <= (meta.recapAt ?? 0)) return;
     try {
       const r = await generateRecap(id, recapGenerationOptions(opts));
-      if (r) {
+      if (r && !shuttingDown && store === queuedStore && store.meta(id) === meta) {
         if (r.recap) meta.recap = r.recap;
         rememberRecapSource(id, meta, opts, r.source, recapBindId(r));
-        meta.recapAt = transcriptMtime(id, recapOptions(id, meta));
+        meta.recapAt = transcriptMtime(id, opts);
         if (r.title && !meta.titleLocked) meta.title = r.title; // never overwrite a hand-set name
         store.save();
         tree?.refresh();
@@ -1014,8 +1056,7 @@ function autoRecapOnOpen(id: string): void {
         log(`✨ auto-recapped ${id.slice(0, 8)} on open → “${meta.title}”`);
       }
     } catch { /* best effort — a failed background recap is silent by design */ }
-    finally { autoRecapping.delete(id); }
-  })();
+  }).catch(() => undefined).finally(() => { autoRecapping.delete(id); });
 }
 
 /** Re-recap every chat whose transcript changed since its last recap (skips up-to-date ones). Sequential so we
@@ -1626,6 +1667,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (!id) return;
       liveTerminals.delete(t); // the terminal object is gone; the tmux session is untouched (still alive)
       if (shuttingDown) { log(`· close ignored (shutdown): ${id.slice(0, 8)}`); return; }
+      if (attachOnlyTerminals.has(t) && t.exitStatus?.reason === vscode.TerminalExitReason.Process && t.exitStatus.code !== 0) {
+        // The server may disappear between the cached live read and attach. That is not a deliberate Drop.
+        log(`· attach failed; chat retained, refreshing live state: ${id.slice(0, 8)}`);
+        void refreshAlive().then(() => tree?.refresh());
+        tree?.refresh();
+        return;
+      }
       if (!cfg('closeToDrop', false)) {
         // close-safe: the TAB is always kept. By DEFAULT closing only DETACHES — the tmux session keeps running in
         // the background (🟡), so closing/reload never stops work and reopening reattaches instantly. Opt into

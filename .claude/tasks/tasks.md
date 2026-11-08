@@ -62,7 +62,7 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
-- [x] [P1] [TASK-024] [Remove blocking status polling](items/task-024-nonblocking-status-polling.md) — measured background stalls, async shared snapshot, 50/100-chat scale checks. Install/public release and worktree closeout evidence live in the task and release record.
+- [ ] [P1] [TASK-024] [Remove blocking status polling](items/task-024-nonblocking-status-polling.md) — measured background stalls, async shared snapshot, 50/100-chat scale checks. Install/public release and worktree closeout evidence live in the task and release record.
 
 - [x] [P1] [TASK-023] [Dock new installs beside Terminal](items/task-023-default-terminal-location.md) — once-per-profile default with legacy layout preservation; 55 tests and isolated native command smoke passed. Packaging and public release evidence live in the task and release record.
 
