@@ -2,7 +2,6 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const cp = require('node:child_process');
 const { listSessions, tmuxAvailable } = require('../out/tmux');
-const { isAgentWorking } = require('../out/working-status');
 
 test('terminal adoption accepts only exact live PTT client identities and fails closed', { skip: !tmuxAvailable() }, () => {
   const { attachedClientSessions } = require('../out/tmux');

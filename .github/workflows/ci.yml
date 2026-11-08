@@ -1,0 +1,40 @@
+name: CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ptt-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Quality
+    # Public, disposable runner only; MoonPress's private CI host is never used.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install locked development dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Typecheck, lint, unit regressions and dependency audit
+        run: npm run check
+      - name: Require exact-source review and scoped acceptance
+        run: npm run quality:check
+      - name: Package and verify actual VSIX runtime and provenance
+        run: npm run package:verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ptt-candidate-${{ github.sha }}
+          path: qa-artifacts/
+          if-no-files-found: error
+          retention-days: 7

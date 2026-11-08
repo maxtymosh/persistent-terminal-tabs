@@ -31,8 +31,8 @@ export const nativeAdapters: readonly StatusAdapter[] = [
     : /^(?:Starting|●)(?: |$)/u.test(c.title) ? 'unknown'
     : /^\S[^\r\n]* \| \S[^\r\n]*$/u.test(c.title) ? 'idle' : 'unknown' },
   { id: 'gemini-title', read: c => c.agent !== 'gemini' ? undefined
-    : /^(?:✦  |⏲  Working…)/u.test(c.title) ? 'working' : /^✋\uFE0F?  Action Required/u.test(c.title) ? 'waiting'
-    : /^◇  Ready/u.test(c.title) ? 'idle' : 'unknown' },
+    : /^(?:✦ {2}|⏲ {2}Working…)/u.test(c.title) ? 'working' : /^✋\uFE0F? {2}Action Required/u.test(c.title) ? 'waiting'
+    : /^◇ {2}Ready/u.test(c.title) ? 'idle' : 'unknown' },
 ];
 
 export function resolveAgentStatus(context: StatusContext, adapters = nativeAdapters): AgentStatus {

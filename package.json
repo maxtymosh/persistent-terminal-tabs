@@ -33,7 +33,8 @@
   },
   "homepage": "https://github.com/maxtymosh/persistent-terminal-tabs",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.85.0",
+    "node": ">=22.13.0"
   },
   "categories": [
     "Other"
@@ -521,16 +522,30 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run typecheck && npm run compile",
     "compile": "tsc -p ./",
     "test": "npm run compile && node --test test/*.test.cjs",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package"
+    "package": "npm run verify",
+    "typecheck": "tsc -p ./ --noEmit",
+    "lint": "eslint src scripts test eslint.config.mjs --max-warnings=0",
+    "test:unit": "node --test test/*.test.cjs",
+    "audit": "npm audit --audit-level=high",
+    "check": "npm run typecheck && npm run lint && npm test && npm run audit",
+    "quality:check": "node scripts/quality-gate.cjs check merge",
+    "package:verify": "node scripts/check-package.cjs",
+    "verify": "npm run check && npm run quality:check && npm run package:verify",
+    "release:check": "npm run verify && node scripts/quality-gate.cjs check release"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.2.0",
-    "typescript": "^5.4.0"
+    "eslint": "10.14.0",
+    "fflate": "0.8.2",
+    "globals": "16.5.0",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "8.72.1"
   }
 }

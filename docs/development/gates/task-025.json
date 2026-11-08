@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "task": "TASK-025",
+  "scope": "Development pipeline and scoped code hygiene only; no native/public release",
+  "reviewer": "Codex owning-session dev-code-review self-review for Max Tymoshyn",
+  "verdict": "Ship",
+  "baseRevision": "806fa4bc6685c548c3f3471697a9e9c5abdd7355",
+  "sourceSha256": "146fa7310a2795b9b50650924461a86b51bd570220386c6cb46f5ce86d24d098",
+  "checks": {
+    "review": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/verification.md",
+        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+      }
+    },
+    "tests": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/verification.md",
+        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+      }
+    },
+    "behavior": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/verification.md",
+        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+      }
+    },
+    "dependencyAudit": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/verification.md",
+        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+      }
+    },
+    "maps": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/verification.md",
+        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+      }
+    },
+    "ownership": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/verification.md",
+        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+      }
+    },
+    "acceptance": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/verification.md",
+        "sha256": "57161f23223d9e17b3a15df28ed6d5aef66ab75f8aff34f78d642032ee4480c4"
+      }
+    }
+  },
+  "releaseVerdict": "Hold",
+  "nativeQA": {
+    "status": "not-run",
+    "reason": "No native/public release is authorized by this pipeline-only checkpoint"
+  }
+}

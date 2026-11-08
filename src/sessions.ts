@@ -116,7 +116,7 @@ function extractCwd(rows: Array<Record<string, unknown>>): string | undefined {
 /** Last cwd in the file's tail — message rows carry cwd all the way down, so the tail can answer
  * even when the whole scannable head is snapshot rows. One bounded read. */
 function tailCwd(file: string): string | undefined {
-  let size = 0;
+  let size: number;
   try {
     size = fs.statSync(file).size;
   } catch {
@@ -195,7 +195,7 @@ export function friendlyProject(cwd: string): string {
 function deriveSession(projectDir: string, file: string): DiscoveredSession | null {
   const id = path.basename(file, '.jsonl');
   if (!UUID_RE.test(id)) return null;
-  let mtimeMs = 0;
+  let mtimeMs: number;
   try {
     mtimeMs = fs.statSync(file).mtimeMs;
   } catch {
@@ -215,7 +215,7 @@ function deriveSession(projectDir: string, file: string): DiscoveredSession | nu
 
 /** Scan every ~/.claude/projects/<project>/<id>.jsonl and derive session metadata. */
 export function discoverSessions(): DiscoveredSession[] {
-  let projects: string[] = [];
+  let projects: string[];
   try {
     projects = fs.readdirSync(PROJECTS_DIR);
   } catch {
@@ -224,7 +224,7 @@ export function discoverSessions(): DiscoveredSession[] {
   const out: DiscoveredSession[] = [];
   for (const project of projects) {
     const dir = path.join(PROJECTS_DIR, project);
-    let files: string[] = [];
+    let files: string[];
     try {
       if (!fs.statSync(dir).isDirectory()) continue;
       files = fs.readdirSync(dir).filter((f) => f.endsWith('.jsonl'));

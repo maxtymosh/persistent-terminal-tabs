@@ -19,3 +19,13 @@ release-notes.md
 install-prompt.md
 **/*.zip
 sha256sums.txt
+
+.github/**
+docs/development/**
+scripts/quality-gate.cjs
+scripts/check-package.cjs
+qa-artifacts/**
+eslint.config.mjs
+.node-version
+contributing.md
+worktree.md
