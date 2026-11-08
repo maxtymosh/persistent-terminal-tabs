@@ -2,6 +2,13 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
+## 1.5.5 — packaging November 7, 2026
+
+- Runtime 96d3ef4 and evidence ed8c4eb are on origin/main. All 67 checks pass, including 50 in-memory terminal mocks; no real synthetic chats were launched. Live reattachment bypasses cold discovery, missing-pane opens preserve existing views, and automatic recap is globally serialized after yielding.
+- Independent live CPU incident traced to Python Environments 1.42.0 workspace scans. Disabled that extension only in Work Root and verified zero rg workers afterward. PTT autoRecapOnOpen remains temporarily false there. This incident mitigation is not bundled into the public extension and does not establish complete workload acceptance.
+- Package, installed runtime, loaded version and anonymous download verification pending. Marketplace retains the recorded authentication blocker.
+- Release worktree ptt-release-155-20261108, branch release/ptt-155, base ed8c4eb; durable lifecycle/evidence in common Git norml/worktrees. Feature source checkout ptt-open-lag-20261108 is integrated; retirement is separate from integration.
+
 ## 1.5.4 — published November 7, 2026
 
 - The live 1.5.3 follow-up reopens TASK-024. Source f2c7732 removes remaining synchronous extension status/client reads and automatic fd discovery, decouples history startup, tolerates asynchronous scheduling pressure and logs failed probes. Failed transport no longer implies stopped chats; unavailable client evidence cannot trigger startup terminal disposal.
@@ -67,7 +74,7 @@ Publisher ID remains maxtymosh. Local vsce publisher inventory is empty; canonic
 
 The installable package passes vsce packaging. Marketplace submission is NOT complete. Microsoft's publisher sign-in page was opened. User was asked for explicit permission to complete publisher setup/upload through the website, because the user's browser-control rule bars silently replacing an unauthenticated CLI with browser operation. No browser session was read or controlled.
 
-Next step: complete Microsoft publisher sign-in through an approved supported route; inspect publisher identity and permissions, register maxtymosh if available and appropriate, and upload the current prepared 1.5.4 VSIX. Browser operation requires explicit approval under Max's standing rule; sign-in alone is allowed, but no login flow is opened during active non-stop mode. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
+Next step: complete Microsoft publisher sign-in through an approved supported route; inspect publisher identity and permissions, register maxtymosh if available and appropriate, and upload the current prepared 1.5.5 VSIX. Browser operation requires explicit approval under Max's standing rule; sign-in alone is allowed, but no login flow is opened during active non-stop mode. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
 
 The earlier normlstudio/ptt-private-share handoff repository remains private; it is not the canonical public source.
 
