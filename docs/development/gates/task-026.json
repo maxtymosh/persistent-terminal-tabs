@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "task": "TASK-026",
+  "scope": "Documentation-only adaptation to dev-ci-cd3.2 seven-stage bundle; no runtime release/install",
+  "reviewer": "Codex owning-session dev-code-review self-review for Max Tymoshyn",
+  "verdict": "Ship",
+  "baseRevision": "fab1bb137a86b7bf18aa16008c1a487b9c76be9f",
+  "sourceSha256": "d864fc5707d4a261cfdc7f46a4212c4e994ec0bf2cefe2bb744a0cf618190fc6",
+  "checks": {
+    "review": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/ci-cd-stage-bundle-verification.md",
+        "sha256": "34ab027e2cc62467c97a9c0cb0f57e91da72999ab1d6f311b9d08bcaa24d25de"
+      }
+    },
+    "tests": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/ci-cd-stage-bundle-verification.md",
+        "sha256": "34ab027e2cc62467c97a9c0cb0f57e91da72999ab1d6f311b9d08bcaa24d25de"
+      }
+    },
+    "behavior": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/ci-cd-stage-bundle-verification.md",
+        "sha256": "34ab027e2cc62467c97a9c0cb0f57e91da72999ab1d6f311b9d08bcaa24d25de"
+      }
+    },
+    "dependencyAudit": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/ci-cd-stage-bundle-verification.md",
+        "sha256": "34ab027e2cc62467c97a9c0cb0f57e91da72999ab1d6f311b9d08bcaa24d25de"
+      }
+    },
+    "maps": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/ci-cd-stage-bundle-verification.md",
+        "sha256": "34ab027e2cc62467c97a9c0cb0f57e91da72999ab1d6f311b9d08bcaa24d25de"
+      }
+    },
+    "ownership": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/ci-cd-stage-bundle-verification.md",
+        "sha256": "34ab027e2cc62467c97a9c0cb0f57e91da72999ab1d6f311b9d08bcaa24d25de"
+      }
+    },
+    "acceptance": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/ci-cd-stage-bundle-verification.md",
+        "sha256": "34ab027e2cc62467c97a9c0cb0f57e91da72999ab1d6f311b9d08bcaa24d25de"
+      }
+    }
+  },
+  "releaseVerdict": "Hold",
+  "nativeQA": {
+    "status": "not-run",
+    "reason": "Documentation-only source migration; no native/public release is requested"
+  }
+}

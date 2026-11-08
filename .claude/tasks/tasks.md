@@ -62,6 +62,9 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
+- [x] [P1] [TASK-026] [Adapt the updated CI/CD stage bundle](items/task-026-ci-cd-stage-bundle.md) — separate PR/merge/delivery/release completion; explicit no-staging transitions; combined release inventory and preserved gates.
+
+
 - [x] [P1] [TASK-025] [Apply MoonPress engineering and QA practices](items/task-025-development-quality-pipeline.md) — required CI, lint, dependency audit, exact-source admission, VSIX provenance and separate native QA.
 
 

@@ -1,0 +1,11 @@
+# PR — PTT
+
+Read [central CI/CD](ci-cd.md). Target: `main`. Entry: requested change, ownership and scoped acceptance. Branch push/PR starts validation/candidate packaging only, never publication or installation.
+
+1. **Confirm scope and current source.** Fetch main; audit related tasks, PRs/history and claims; use an owned isolated worktree. Record requested stage/acceptance, preserve unrelated WIP and avoid duplicate fixes.
+2. **Plan, implement and check.** Record the scoped plan and needed design decisions. For a reproducible bug, establish a meaningful failing regression before the fix where practical; disclose limitations. Do not add implementation-mirroring tests for documentation/trivial changes. Use the pinned Node and `npm ci --ignore-scripts`; run `npm run check` and affected real-surface checks. Keep scale fixtures mocked and real user state untouched.
+3. **Review exact source.** Review logic/races, performance, preservation, errors, secrets and acceptance with dev-code-review/Ponytail principles. Resolve blocking findings and reconcile architecture/tasks/maps. Write hashed evidence plus regular gate JSON under `docs/development/gates/`; `node scripts/quality-gate.cjs check merge` must pass. Disclose self-review/skips/native limits truthfully.
+4. **Publish a reviewable PR.** Commit/push exact paths; use `gh pr create` for `maxtymosh/persistent-terminal-tabs`, target main, actual branch/title and prepared `--body-file`. Require exact-head `Quality`, which runs checks, admission and VSIX verification. CI's seven-day candidate/provenance artifact is neither a release nor native QA.
+5. **Record readiness and handoff.** Save PR/head/base, behavior/risk, checks/skips, compatibility/migrations and required release journeys in the existing task/PR. Readiness requires applicable gates actually passing. A PR-only request finishes here with durable checkout disposition; continue [merge](merge.md) only within actual requested/standing scope.
+
+Exit: qualified reviewable source and transferable handoff. A distributable installer, installation or release is not a general PR requirement; affected native behavior may still require actual proof at this stage. No feature chat must stay alive for a separately owned release.

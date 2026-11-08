@@ -1,6 +1,6 @@
 # Contributing to Persistent Terminal Tabs
 
-The canonical development and publication process is [.claude/ci-cd.md](.claude/ci-cd.md). Use an isolated task branch/worktree and open a PR to main. Keep tests and evidence tied to the exact source; a local build is not a release.
+The canonical development and publication process is [.claude/ci-cd/ci-cd.md](.claude/ci-cd/ci-cd.md). Use an isolated task branch/worktree and open a PR to main. Keep tests and evidence tied to the exact source; a local build is not a release.
 
 ```sh
 npm ci --ignore-scripts
@@ -18,3 +18,5 @@ ESLint checks source, tests and release tooling with zero warnings; TypeScript c
 Before merge, perform and record source review, meaningful tests, affected behavior, dependency audit, architecture/task reconciliation, ownership and scoped acceptance. The owning AI can review and merge after passing gates; a human click is not a normal step. Use `node scripts/quality-gate.cjs merge PR_NUMBER`.
 
 Native QA is a separate [checklist](docs/development/native-qa.md). Unit/fixture results do not establish real VS Code UI behavior or an installed release. Public artifacts require `npm run release:check` and the publication steps in the canonical contract. This pipeline change does not publish a new extension version.
+
+Choose the requested [PR](.claude/ci-cd/pr.md), [merge](.claude/ci-cd/merge.md) or [release](.claude/ci-cd/release.md) stage. Source integration can finish before a separately owned release; retain a durable handoff instead of keeping feature chats/checkouts alive. A release inventories every included PR and direct commit and verifies their combined behavior. PTT has no staging/cloud deployment or Beta/Stable rings.
