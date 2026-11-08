@@ -35,6 +35,7 @@ test('status dot renders blue working, green attached, yellow detached, grey sus
 
 test('activation retains verified attached terminals and paints native work transitions without reopening sessions', () => {
   const cp = require('node:child_process');
+  for (const failedClients of ['0','1']) {
   const result = cp.spawnSync(process.execPath, ['-e', String.raw`
     const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),Module=require('node:module');
     const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ptt-activation-'));
@@ -44,6 +45,7 @@ test('activation retains verified attached terminals and paints native work tran
     const ids=['live0001-session','idle0002-session',...Array.from({length:8},(_,i)=>'cold000'+i+'-session')];
     const store=new StateStore(workspaceStatePath(tmp),tmp,{groups:[{name:'Test',sessionIds:ids}],sessions:Object.fromEntries(ids.map(id=>[id,{title:id,cwd:tmp,agent:'claude'}]))});
     store.save();
+    const failedClients=process.env.PTT_TEST_FAILED_CLIENTS==='1';
     let destroyed=0,launched=0,provider,working=true,attached=true;
     const terminals=[{name:'Claude',show(){},exitStatus:undefined,processId:Promise.resolve(500),dispose(){destroyed++}},
       {name:'Claude stale duplicate',processId:Promise.resolve(999),dispose(){destroyed++}}];
@@ -64,12 +66,13 @@ test('activation retains verified attached terminals and paints native work tran
     Module._load=function(name,...args){
       if(name==='vscode')return vscode;
       if(name==='./codex-history')return{configureCodexHistory(){},refreshCodexThreads:async()=>{}};
-      if(name==='./tmux')return{tmuxAvailable:()=>true,applyTmuxConf(){},listSessions:snapshot,listSessionsAsync:async()=>snapshot(),attachedClientSessions:()=>new Map([[500,'live0001']]),tmuxDiag:()=>'',hasTranscript:()=>false};
+      if(name==='./tmux')return{tmuxAvailable:()=>true,applyTmuxConf(){},listSessions:snapshot,listSessionsAsync:async()=>snapshot(),attachedClientSessionsAsync:async()=>failedClients?undefined:new Map([[500,'live0001']]),tmuxDiag:()=>'',hasTranscript:()=>false};
       if(name==='./sessions')return{transcriptCwds:()=>new Map()};
       return real.call(this,name,...args);
     };
     (async()=>{try{
       const ext=require('./out/extension');await ext.activate({subscriptions:[]});
+      if(failedClients){assert.equal(destroyed,0,'unavailable adoption evidence must retain every terminal');assert.equal(launched,0);ext.deactivate();return;}
       assert.equal(destroyed,1,'only unverified stray is disposed');assert.equal(launched,0,'no cold or detached session is launched');
       const color=id=>provider.getTreeItem({kind:'tab',id,group:'Test'}).iconPath.color?.id;
       assert.equal(color(ids[0]),'charts.blue');
@@ -78,11 +81,12 @@ test('activation retains verified attached terminals and paints native work tran
       while(pending.length)await pending.shift()();
       assert.equal(color(ids[0]),'charts.green','clicking an already open tab refreshes state');
       assert.equal(color(ids[1]),'charts.yellow');
-      working=true;handlers.get('terminalTabs.diagDots')();assert.equal(color(ids[0]),'charts.blue');
+      working=true;await handlers.get('terminalTabs.diagDots')();assert.equal(color(ids[0]),'charts.blue');
       ext.deactivate();
     }finally{fs.rmSync(tmp,{recursive:true,force:true})}})().catch(e=>{console.error(e);process.exitCode=1});
-  `], { cwd: require('node:path').join(__dirname,'..'),encoding:'utf8',timeout:10000 });
+  `], { cwd: require('node:path').join(__dirname,'..'),encoding:'utf8',timeout:10000,env:{...process.env,PTT_TEST_FAILED_CLIENTS:failedClients} });
   assert.equal(result.status,0,result.stderr || result.stdout);
+  }
 });
 
 

@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { StateStore, StateData, NEW_GROUP, SessionMeta, AgentKind, workspaceSlug, rememberCodexLink, rememberGrokLink, rememberAgyLink, agentDisplayName } from './state';
 import { TabsTree, Node, Arrange } from './tree';
-import { tmuxAvailable, tmuxLaunch, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessions, listSessionsAsync, attachedClientSessions, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
+import { tmuxAvailable, tmuxLaunch, killSession, hasTranscript, hasCodexSession, hasGrokSession, hasAgySession, AgentSpec, applyTmuxConf, listSessionsAsync, attachedClientSessionsAsync, TmuxSessionInfo, tmuxDiag, liveCodexThreadId, liveCodexTranscript, liveGrokTranscript, liveAgyTranscript } from './tmux';
 import { friendlyProject, discoverSessions, transcriptCwd, transcriptCwds } from './sessions';
 import { recordHistory, readHistory, historyPath, HistoryEvent } from './history';
 import { generateRecap, Recap, RecapOptions, RecapSource, transcriptMtime, grokSessionIdFromFile, agySessionIdFromFile } from './recaps';
@@ -77,7 +77,7 @@ function diagDots(when: string): void {
   // what aliveIds holds, what a FRESH listSessions returns, the first saved id + its slice, and a direct has().
   try {
     const cached = [...aliveIds].slice(0, 6).map((x) => JSON.stringify(x)).join(',');
-    const snapshot = listSessions();
+    const snapshot = sessionSnapshot;
     const fresh = snapshot.slice(0, 6).map((s) => JSON.stringify(s.id)).join(',');
     diag(`  WORK@${when} ${snapshot.map(s => `${s.id}:${s.command}->${s.agentCommand ?? 'unverified'}:busyTitle=${isAgentWorking('codex', s.title)}:claude=${s.claudeStatus ?? 'unknown'}:working=${s.working}:state=${s.status?.state}:source=${s.status?.source}`).join(' ')}`);
     const s0 = store.allIds()[0] ?? '';
@@ -164,6 +164,7 @@ let agentStatuses = new Map<string, AgentStatus>();
 let sessionSnapshot: TmuxSessionInfo[] = [];
 let snapshotGeneration = 0;
 let alivePolling: Promise<boolean> | undefined;
+let pollFailed = false;
 
 function workingCfg(): { on: boolean; pollMs: number } {
   return {
@@ -179,10 +180,10 @@ function isWorkingCached(id: string): boolean {
 
 /** Re-read the live tmux set AND the 🔵 working set; returns whether a DOT would change (alive set, or working
  *  set) so the timer only re-renders when it matters. */
-function refreshAlive(): boolean {
-  ++snapshotGeneration; // explicit actions supersede any older in-flight async read
-  try { return applySessionSnapshot(listSessions()); }
-  catch { return false; }
+async function refreshAlive(): Promise<boolean> {
+  ++snapshotGeneration; // discard an in-flight read begun before this action
+  if (alivePolling) await alivePolling;
+  return pollAlive();
 }
 
 /** One in-flight snapshot for clicks, catch-ups and timer ticks. Never block the extension host on a child. */
@@ -190,10 +191,25 @@ function pollAlive(): Promise<boolean> {
   if (shuttingDown || !useTmux) return Promise.resolve(false);
   if (alivePolling) return alivePolling;
   const generation = snapshotGeneration;
-  alivePolling = listSessionsAsync().then(sessions => {
+  const started = Date.now();
+  alivePolling = listSessionsAsync(message => diag(`status ${message}`)).then(sessions => {
     if (shuttingDown || generation !== snapshotGeneration) return false;
+    if (pollFailed || Date.now() - started > 1000) {
+      diag(`status poll recovered=${pollFailed} elapsedMs=${Date.now() - started} live=${sessions.length} unknown=${sessions.filter(s => s.status.state === 'unknown').length}`);
+    }
+    pollFailed = false;
     return applySessionSnapshot(sessions);
-  }).catch(() => false).finally(() => { alivePolling = undefined; });
+  }).catch(() => {
+    if (!shuttingDown) {
+      if (!pollFailed) diag(`status poll unavailable elapsedMs=${Date.now() - started}; attachment unchanged; work unknown`);
+      pollFailed = true;
+      // Preserve the last observed attachment on a transport failure, but never retain stale blue.
+      workingSet.clear();
+      agentStatuses = new Map([...aliveIds].map(id => [id, UNKNOWN_STATUS]));
+      tree?.refresh();
+    }
+    return false;
+  }).finally(() => { alivePolling = undefined; });
   return alivePolling;
 }
 
@@ -1130,9 +1146,11 @@ function indexAllSlices(): Map<string, { title: string; group: string; slug: str
 }
 
 /** tt-* sessions alive in tmux but in NO PTT slice — pure leftover RAM, safe to kill. */
-function listOrphans(): TmuxSessionInfo[] {
+async function listOrphans(): Promise<TmuxSessionInfo[]> {
+  await refreshAlive();
+  if (pollFailed) return [];
   const tracked = indexAllSlices();
-  return listSessions().filter((s) => !tracked.has(s.id));
+  return sessionSnapshot.filter((s) => !tracked.has(s.id));
 }
 
 /**
@@ -1141,9 +1159,11 @@ function listOrphans(): TmuxSessionInfo[] {
  * usually orphans; it's that closing a tab now KEEPS its session alive (close-safe), so detached sessions
  * accumulate. This view + Drop (per tab) + Clean Orphans are the levers to reclaim RAM.
  */
-function showSessions(): void {
+async function showSessions(): Promise<void> {
   if (!useTmux) { vscode.window.showInformationMessage('tmux is off — no persistent sessions to list.'); return; }
-  const sessions = listSessions();
+  await refreshAlive();
+  if (pollFailed) { vscode.window.showInformationMessage('Live session status is temporarily unavailable; no sessions were changed.'); return; }
+  const sessions = sessionSnapshot;
   if (!sessions.length) { vscode.window.showInformationMessage('No live tmux sessions on the terminal-tabs socket.'); return; }
   const tracked = indexAllSlices();
   const here = workspaceSlug(store.workspaceKey);
@@ -1183,7 +1203,7 @@ function showSessions(): void {
  *  keep their transcripts on disk and can be re-added later. Never auto-runs. */
 async function cleanOrphans(): Promise<void> {
   if (!useTmux) { vscode.window.showInformationMessage('tmux is off — nothing to clean.'); return; }
-  const orphans = listOrphans();
+  const orphans = await listOrphans();
   if (!orphans.length) {
     vscode.window.showInformationMessage('No orphaned tmux sessions — every live session maps to a PTT tab.');
     return;
@@ -1203,10 +1223,12 @@ async function cleanOrphans(): Promise<void> {
 /** The set of suspendable sessions: live tt-* that are DETACHED (no terminal viewing them in any window) and not
  *  open in THIS window. `idleBeforeSec`, if given, additionally requires the session's last activity to predate it
  *  (idle auto-suspend); omit it to take every detached session (the manual "Free RAM" button). */
-function suspendable(idleBeforeSec?: number): TmuxSessionInfo[] {
+async function suspendable(idleBeforeSec?: number): Promise<TmuxSessionInfo[]> {
+  await refreshAlive();
+  if (pollFailed) return [];
   pruneDeadTerminals();
   const openHere = new Set([...liveTerminals.values()].map((id) => id.slice(0, 8)));
-  return listSessions().filter(
+  return sessionSnapshot.filter(
     (s) => !s.attached && !openHere.has(s.id) && (idleBeforeSec === undefined || (s.activitySec > 0 && s.activitySec < idleBeforeSec)),
   );
 }
@@ -1245,12 +1267,12 @@ function canAutoSuspendSession(session: TmuxSessionInfo): boolean {
 /** Per-chat ⏳ Suspend: send THIS chat to ⚪ — kill its tmux (frees its RAM) but keep the tab. Works from any state
  *  (🟢 open: closes the terminal too; 🟡 detached: just kills the session). Click the grey row later to cold-resume
  *  from its transcript. The deliberate "park this one, I'm done for now" button. */
-function suspendTab(node?: Node): void {
+async function suspendTab(node?: Node): Promise<void> {
   if (!node || node.kind !== 'tab') return;
   const t = terminalFor(node.id);
   if (t) { liveTerminals.delete(t); t.dispose(); } // untrack BEFORE dispose so onDidClose doesn't also act on it
   if (useTmux) killSession(node.id);
-  refreshAlive();
+  await refreshAlive();
   tree?.refresh();
   log(`💤 suspended ${node.id.slice(0, 8)} → ⚪ (tab kept; click to resume)`);
 }
@@ -1263,7 +1285,7 @@ function suspendTab(node?: Node): void {
  */
 async function suspendClosed(): Promise<void> {
   if (!useTmux) { vscode.window.showInformationMessage('tmux is off — nothing to suspend.'); return; }
-  const victims = suspendable().filter(canAutoSuspendSession);
+  const victims = (await suspendable()).filter(canAutoSuspendSession);
   if (!victims.length) {
     vscode.window.showInformationMessage('Nothing to suspend — no closed sessions are running. (Open tabs keep their RAM; closed ones already freed it.)');
     return;
@@ -1276,7 +1298,7 @@ async function suspendClosed(): Promise<void> {
   );
   if (pick !== 'Suspend & free RAM') return;
   for (const s of victims) killSession(s.id);
-  refreshAlive();
+  await refreshAlive();
   tree?.refresh();
   log(`💤 suspended ${victims.length} closed session(s) (~${(ram / 1024).toFixed(1)} GB freed; tabs kept)`);
   vscode.window.showInformationMessage(`💤 Suspended ${victims.length} session(s), freed ~${(ram / 1024).toFixed(1)} GB. Click a grey tab to resume it.`);
@@ -1285,15 +1307,15 @@ async function suspendClosed(): Promise<void> {
 /** Idle auto-suspend (runs at startup + every 30 min). Reaps detached sessions whose tmux activity is older than
  *  `autoSuspendHours` (0 = off). A session producing output keeps its activity fresh, so background work is spared;
  *  this only clears the genuinely-parked sessions — the multi-day pileup that thrashes a 24 GB box. Tabs are kept. */
-function autoSuspendSweep(): void {
+async function autoSuspendSweep(): Promise<void> {
   if (!useTmux) return;
   const hours = cfg('autoSuspendHours', 12);
   if (!hours || hours <= 0) return;
-  const victims = suspendable(Date.now() / 1000 - hours * 3600).filter(canAutoSuspendSession);
+  const victims = (await suspendable(Date.now() / 1000 - hours * 3600)).filter(canAutoSuspendSession);
   if (!victims.length) return;
   const ram = victims.reduce((a, s) => a + s.ramMB, 0);
   for (const s of victims) killSession(s.id);
-  refreshAlive();
+  await refreshAlive();
   tree?.refresh();
   log(`💤 auto-suspended ${victims.length} session(s) idle > ${hours}h (~${(ram / 1024).toFixed(1)} GB freed; tabs kept, click to resume)`);
 }
@@ -1305,13 +1327,13 @@ function autoSuspendSweep(): void {
  * reload. This kills any of THIS slice's sessions that aren't being opened now (and aren't attached in another
  * window), so a fresh window starts with grey = no tmux. Tabs are kept; they re-resume on click. Off if suspendOnClose is off.
  */
-function suspendStrayOnStartup(): void {
+async function suspendStrayOnStartup(): Promise<void> {
   if (!useTmux || !cfg('suspendOnClose', false)) return; // default OFF: reloaded sessions stay 🟡 alive, not killed
   const mine = new Set(store.allIds().map((id) => id.slice(0, 8)));
-  const victims = suspendable().filter((s) => mine.has(s.id) && canAutoSuspendSession(s));
+  const victims = (await suspendable()).filter((s) => mine.has(s.id) && canAutoSuspendSession(s));
   if (!victims.length) return;
   for (const s of victims) killSession(s.id);
-  refreshAlive();
+  await refreshAlive();
   tree?.refresh();
   log(`💤 startup: suspended ${victims.length} stray session(s) — grey = no tmux (running ⟺ open)`);
 }
@@ -1497,7 +1519,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   ++snapshotGeneration;
   useTmux = cfg('useTmux', true) && tmuxAvailable();
   configureCodexHistory(cfg('codexCommand', 'codex'));
-  await refreshCodexThreads().catch(() => log('Codex history API unavailable; legacy transcript lookup remains enabled'));
+  // History metadata is independent of live terminals; do not gate the panel on a slow app-server.
+  void refreshCodexThreads().then(() => {
+    if (!shuttingDown && tree && bindLiveForeignSessions(true)) tree.refresh();
+  }).catch(() => log('Codex history API unavailable; legacy transcript lookup remains enabled'));
   out.show(true);
   log(`▶ activated — ${store.allIds().length} saved tab(s) · tmux ${useTmux ? 'ON (lossless)' : 'off (plain shells)'}`);
   log(`  workspace: ${wsKey}`);
@@ -1515,6 +1540,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // extension stays passive and never disposes the user's own terminals — this is what makes a
   // GLOBAL install safe across many windows (each restores only its own slice; the rest are untouched).
   const managed = store.allIds().length > 0;
+  let clientAdoptionVerified = !useTmux;
 
   // Apply our tmux conf live (mouse ON + clipboard→pbcopy) so sessions created under an older conf scroll and
   // copy correctly without a reopen. Mouse is hardcoded on — scroll under tmux needs copy-mode (wheel).
@@ -1527,17 +1553,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // Seed the live-tmux set before the first paint, so dots render 🟢/🟡/⚪ correctly from the start (sessions that
   // survived the last quit show 🟡 detached, not ⚪). Cheap one-pass; kept fresh by actions + the catch-up below.
   if (managed && useTmux) {
-    refreshAlive();
+    await pollAlive();
     // Restart Extension Host keeps native terminals alive. Adopt only an exact
     // verified tmux-client PID in this workspace; labels are not identities.
-    const clients = attachedClientSessions();
+    const clients = await attachedClientSessionsAsync();
+    clientAdoptionVerified = clients !== undefined && !pollFailed;
     await Promise.all(vscode.window.terminals.map(async terminal => {
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         const pid = await Promise.race([terminal.processId, new Promise<undefined>(resolve => {
           timer = setTimeout(() => resolve(undefined), 500);
         })]);
-        const shortId = pid === undefined ? undefined : clients.get(pid);
+        const shortId = pid === undefined ? undefined : clients?.get(pid);
         const matches = shortId ? store.allIds().filter(id => id.slice(0, 8) === shortId) : [];
         if (matches.length === 1 && aliveIds.has(shortId!) && vscode.window.terminals.includes(terminal)) {
           liveTerminals.set(terminal, matches[0]);
@@ -1545,17 +1572,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       } catch { /* unavailable process identity cannot adopt a terminal */ }
       finally { if (timer) clearTimeout(timer); }
     }));
-    bindLiveForeignSessions();
+    bindLiveForeignSessions(true);
     log(`· startup: ${aliveIds.size} live tmux session(s) detected (0 here = empty at activate → catch-up re-polls)`);
     // Persist the host's real view so it can be read back after a reload (settles stale-build vs empty-listSessions).
-    diag(`activate version=${context.extension?.packageJSON?.version ?? 'unknown'} managed=${managed} useTmux=${useTmux} saved=${store.allIds().length} live=${aliveIds.size} | ${tmuxDiag()}`);
+    diag(`activate version=${context.extension?.packageJSON?.version ?? 'unknown'} managed=${managed} useTmux=${useTmux} saved=${store.allIds().length} live=${aliveIds.size} | ${tmuxDiag(sessionSnapshot)}`);
   } else {
     diag(`activate version=${context.extension?.packageJSON?.version ?? 'unknown'} managed=${managed} useTmux=${useTmux} saved=${store.allIds().length} (alive-tracking OFF: ${!managed ? 'unmanaged window' : 'tmux unavailable'})`);
   }
 
   // Grace window: dispose untracked revivals (a default `zsh`) that surface right after startup.
   // Armed only in a managed window, so an unmanaged window never disposes a freshly-opened terminal.
-  graceUntil = managed ? Date.now() + STARTUP_GRACE_MS : 0;
+  graceUntil = managed && clientAdoptionVerified ? Date.now() + STARTUP_GRACE_MS : 0;
   tree = new TabsTree(store, (id) => isOpen(id) || attachedIds.has(id.slice(0, 8)), (a: Arrange) => {
     store.save();
     pruneDeadTerminals(); // clear stale anchors before reconciling, so splits don't fall back to new tabs
@@ -1611,7 +1638,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         } else {
           log(`· tab closed — DETACHED (session alive in background 🟡; click to reattach): ${id.slice(0, 8)}`);
         }
-        refreshAlive();
+        void refreshAlive().then(() => tree?.refresh());
         tree?.refresh(); // dot goes 🟡 detached (or ⚪ if suspendOnClose) but the tab stays
         return;
       }
@@ -1654,8 +1681,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Diagnose the dots: re-poll tmux, FORCE a full tree re-render, log the predicate distribution, and report it.
     // Direct test of the "computed yellow but painted grey" hypothesis — if the dots go yellow right after running
     // this, it's a render/refresh miss (and this is the manual kick); if they stay grey, the log says why.
-    vscode.commands.registerCommand('terminalTabs.diagDots', () => {
-      const changed = refreshAlive();
+    vscode.commands.registerCommand('terminalTabs.diagDots', async () => {
+      const changed = await refreshAlive();
       tree?.refresh();
       diagDots('manual');
       let open = 0, detached = 0, suspended = 0, working = 0;
@@ -1682,6 +1709,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Unmanaged window (no saved tabs for this workspace): stay passive — leave every existing
     // terminal exactly where it is. This is the guard that makes a global install non-destructive.
     log('· passive — no saved tabs for this workspace; existing terminals left untouched');
+  } else if (!clientAdoptionVerified) {
+    log('· startup client evidence unavailable; existing terminals retained without rebuilding');
   } else if (cfg('openOnStartup', true) && store.allIds().length <= cfg('autoOpenLimit', 8)) {
     renderAll(); // few tabs → safe to open them all at once (disposes revived ghosts + rebuilds the set)
   } else {
@@ -1737,7 +1766,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       tree?.refresh();
       if (ms === 3000) diag(`catch-up@3000ms live=${aliveIds.size}`);
     }, ms);
-    setTimeout(autoSuspendSweep, 4500);
+    setTimeout(() => { void autoSuspendSweep(); }, 4500);
     // Snapshot what the tree's OWN predicates resolve to, at activate-end and after everything settles — the
     // definitive read on why alive rows render ⚪ (see diagDots). These bracket the moment Max looks at the panel.
     diagDots('activate-end');

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.4 — November 7, 2026
+
+- Make startup status/client adoption, diagnostics, session reports and automatic suspension scans asynchronous; reuse cached diagnostic snapshots.
+- Load Codex history separately from panel startup; keep legacy open-file discovery on explicit recap paths.
+- Allow asynchronous status probes up to eight seconds under scheduling pressure. Log probe failures and recoveries without conversation text.
+- A failed tmux transport no longer marks every chat stopped. Work becomes unknown until a verified snapshot recovers; automatic cleanup skips failed reads.
+
 ## 1.5.3 — November 7, 2026
 
 - Keep status polling and click refresh responsive with asynchronous, bounded tmux/process reads shared across concurrent requests.

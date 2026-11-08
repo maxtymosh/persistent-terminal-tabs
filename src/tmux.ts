@@ -68,7 +68,7 @@ function socketArgs(): string[] {
  * `list` is 0 while a shell sees sessions, the host can't reach the server (the all-grey-dots bug); the probe
  * map shows which candidate dirs had the socket file. Diagnostic only; never throws.
  */
-export function tmuxDiag(): string {
+export function tmuxDiag(sessions?: TmuxSessionInfo[]): string {
   const uid = typeof process.getuid === 'function' ? process.getuid() : '';
   const probes = [
     ['TMUX_TMPDIR', process.env.TMUX_TMPDIR],
@@ -82,7 +82,7 @@ export function tmuxDiag(): string {
       let ex = false; try { ex = fs.existsSync(p); } catch { /* ignore */ }
       return `${label}:${ex ? 'FOUND' : 'no'}`;
     });
-  return `tmux=${tmuxPath()} resolved=[${socketArgs().join(' ')}] probes={${probes.join(', ')}} sessions=${listSessions().length}`;
+  return `tmux=${tmuxPath()} resolved=[${socketArgs().join(' ')}] probes={${probes.join(', ')}} sessions=${(sessions ?? listSessions()).length}`;
 }
 
 function ensureConf(): void {
@@ -408,24 +408,33 @@ export function listSessions(): TmuxSessionInfo[] {
 }
 
 /** Background/UI polling must never wait synchronously for tmux or a full system process listing. */
-export async function listSessionsAsync(): Promise<TmuxSessionInfo[]> {
+export async function listSessionsAsync(report: (message: string) => void = () => {}): Promise<TmuxSessionInfo[]> {
   const tmux = tmuxPath();
   if (!tmux) return [];
-  const run = (file: string, args: string[], env = process.env): Promise<string | null> => new Promise(resolve => {
-    cp.execFile(file, args, { encoding: 'utf8', env, timeout: 2000, maxBuffer: 8 * 1024 * 1024 },
-      (error, stdout) => resolve(error ? null : stdout));
+  const run = (file: string, args: string[], env = process.env): Promise<{ output: string | null; absent: boolean }> => new Promise(resolve => {
+    const started = Date.now();
+    // This is asynchronous: tolerate temporary scheduling/I/O pressure without a two-second grey flash.
+    cp.execFile(file, args, { encoding: 'utf8', env, timeout: 8000, maxBuffer: 8 * 1024 * 1024 },
+      (error, stdout, stderr) => {
+        if (error) report(`probe=${file === 'ps' ? 'ps' : 'tmux'} failed code=${error.code ?? 'unknown'} killed=${!!error.killed} elapsedMs=${Date.now() - started}`);
+        resolve({ output: error ? null : stdout, absent: !!error && !error.killed && /no server running|error connecting|failed to connect/i.test(stderr ?? '') });
+      });
   });
   const format = '#{session_name}|#{session_attached}|#{pane_pid}|#{pane_current_command}|#{session_activity}|#{pane_tty}|#{pane_title}';
   const env = { ...process.env, LANG: process.env.LANG || 'en_US.UTF-8' };
-  let raw = await run(tmux, [...socketArgs(), 'list-sessions', '-F', format], env);
-  if (raw === null || raw.trim() === '') {
+  let result = await run(tmux, [...socketArgs(), 'list-sessions', '-F', format], env);
+  if (result.output === null || result.output.trim() === '') {
     const alternate = await run(tmux, ['-L', SOCKET, 'list-sessions', '-F', format], env);
-    if (alternate !== null && alternate.trim() !== '') raw = alternate;
+    if (alternate.output !== null && alternate.output.trim() !== '') result = alternate;
+    else if (result.output === null && alternate.output === null && !(result.absent && alternate.absent)) {
+      throw new Error('tmux snapshot unavailable'); // a timeout is not evidence that all chats stopped
+    }
   }
+  const raw = result.output;
   if (!raw?.trim()) return [];
   const ps = await run('ps', ['-axo', 'pid=,ppid=,pgid=,tpgid=,tty=,stat=,rss=,lstart=,comm='],
     { ...process.env, LC_ALL: 'C', TZ: 'UTC' });
-  return sessionSnapshot(raw, ps === null ? new Map() : parseProcessSnapshot(ps));
+  return sessionSnapshot(raw, ps.output === null ? new Map() : parseProcessSnapshot(ps.output));
 }
 
 /** Shared ownership/status interpretation keeps async polling identical to explicit synchronous diagnostics. */
@@ -473,6 +482,24 @@ function sessionSnapshot(raw: string, processes: Map<string, PaneProcess>): Tmux
 
 /** Exact live tmux client PID -> session, for adopting terminals after an
  * extension-host restart without disposing the user's existing split layout. */
+export async function attachedClientSessionsAsync(): Promise<Map<number, string> | undefined> {
+  const result = new Map<number, string>();
+  const tmux = tmuxPath();
+  if (!tmux) return result;
+  try {
+    const raw = await new Promise<string>((resolve, reject) => {
+      cp.execFile(tmux, [...socketArgs(), 'list-clients', '-F', '#{client_pid}|#{session_name}'],
+        { encoding: 'utf8', timeout: 8000, maxBuffer: 1024 * 1024 },
+        (error, stdout) => error ? reject(error) : resolve(stdout));
+    });
+    for (const line of raw.split('\n')) {
+      const match = line.match(/^(\d+)\|tt-([a-zA-Z0-9-]+)$/);
+      if (match) result.set(Number(match[1]), match[2]);
+    }
+  } catch { return undefined; } // unavailable evidence must not authorize disposal of live terminals
+  return result;
+}
+
 export function attachedClientSessions(): Map<number, string> {
   const result = new Map<number, string>();
   const tmux = tmuxPath();

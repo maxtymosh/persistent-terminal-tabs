@@ -2,7 +2,7 @@
   "name": "persistent-terminal-tabs",
   "displayName": "Persistent Terminal Tabs",
   "description": "Keep Claude and Codex terminal chats organized in saved groups. Reconnect to live sessions after reopening VS Code with tmux.",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "publisher": "maxtymosh",
   "author": "Max Tymoshyn",
   "license": "MIT",

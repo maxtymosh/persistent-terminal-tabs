@@ -18,7 +18,7 @@ test('async snapshot yields while slow child probes run and preserves native wor
   };
   let probes=0;
   cp.execFile=(file,args,opts,done)=>{
-    probes++;assert.equal(opts.timeout,2000);assert.equal(opts.maxBuffer,8*1024*1024);
+    probes++;assert.equal(opts.timeout,8000);assert.equal(opts.maxBuffer,8*1024*1024);
     if(file==='ps'){assert.equal(opts.env.LC_ALL,'C');assert.equal(opts.env.TZ,'UTC');}
     setTimeout(()=>{try{done(null,output(file,args));}catch(e){done(e,'');}},40);
   };
@@ -43,10 +43,27 @@ test('async snapshot yields while slow child probes run and preserves native wor
 test('async socket fallback is bounded and no-server result skips ps', {skip:!tmuxAvailable()},async t=>{
   const original=cp.execFile;t.after(()=>{cp.execFile=original;});let count=0;
   cp.execFile=(file,args,opts,done)=>{
-    count++;assert.notEqual(file,'ps');assert.equal(opts.timeout,2000);
-    queueMicrotask(()=>done(Error('server unavailable'),''));
+    count++;assert.notEqual(file,'ps');assert.equal(opts.timeout,8000);
+    queueMicrotask(()=>done(Error('server unavailable'),'','no server running'));
   };
   assert.deepEqual(await listSessionsAsync(),[]);assert.equal(count,2);
+});
+
+test('a process read taking longer than the old two-second limit stays nonblocking and resolves native state', {skip:!tmuxAvailable()},async t=>{
+  const original=cp.execFile;t.after(()=>{cp.execFile=original;});let heartbeat=false;
+  cp.execFile=(file,args,opts,done)=>{
+    assert.equal(opts.timeout,8000);
+    setTimeout(()=>done(null,file==='ps'?'4302 1 4302 4302 ttys010 R+ 2048 codex\n':'tt-slow0001|1|4302|codex|123|/dev/ttys010|⠋ Work | host\n'),file==='ps'?2100:0);
+  };
+  const read=listSessionsAsync();setTimeout(()=>{heartbeat=true;},10);
+  const result=await read;assert.ok(heartbeat);assert.equal(result[0].status.state,'working');
+});
+
+test('transient tmux transport failure rejects instead of falsely reporting every chat stopped', {skip:!tmuxAvailable()},async t=>{
+  const original=cp.execFile;t.after(()=>{cp.execFile=original;});const reports=[];
+  cp.execFile=(file,args,opts,done)=>queueMicrotask(()=>done(Object.assign(Error('timeout'),{killed:true,code:'ETIMEDOUT'}),'',''));
+  await assert.rejects(listSessionsAsync(message=>reports.push(message)),/snapshot unavailable/);
+  assert.equal(reports.length,2);assert.ok(reports.every(s=>s.includes('killed=true')));
 });
 
 test('50 live chats and 100-chat stress fixture still use only two async child probes per snapshot', {skip:!tmuxAvailable()},async t=>{
@@ -77,7 +94,7 @@ test('background ticks and clicks share one async read, avoid sync binding probe
     const liveIds=['live0001-session',...Array.from({length:49},(_,i)=>'live'+String(i+2).padStart(4,'0')+'-session')];
     const ids=[...liveIds,...Array.from({length:73},(_,i)=>'cold'+String(i).padStart(4,'0')+'-session')];
     new StateStore(workspaceStatePath(tmp),tmp,{groups:[{name:'Test',sessionIds:ids}],sessions:Object.fromEntries(ids.map(id=>[id,{title:'Task',cwd:tmp,codexSessionId:'thread-1'}]))}).save();
-    const handlers=new Map(),d={dispose(){}};let provider,working=true,reads=0,syncReads=0,resolveRead,holdHistory=false,resolveHistory;
+    const handlers=new Map(),d={dispose(){}};let provider,working=true,reads=0,syncReads=0,resolveRead,rejectRead,holdReads=false,holdHistory=false,resolveHistory;
     const terminals=liveIds.map((id,i)=>({name:'Codex',processId:Promise.resolve(500+i),show(){},dispose(){throw Error('must retain user terminal')}}));
     const snapshot=()=>liveIds.map(id=>({id:id.slice(0,8),name:'tt-'+id.slice(0,8),attached:true,working,command:'zsh',title:'Work | host',agentCommand:'codex',status:{state:working?'working':'idle',source:'test'},ramMB:1,activitySec:1}));
     const vscode={extensions:{getExtension:()=>undefined},EventEmitter:class{event=()=>d;fire(){}},TreeItem:class{constructor(label){this.label=label}},ThemeIcon:class{constructor(id,color){this.id=id;this.color=color}},ThemeColor:class{constructor(id){this.id=id}},MarkdownString:class{appendMarkdown(){}},TreeItemCollapsibleState:{None:0},StatusBarAlignment:{Right:1},Uri:{file:fsPath=>({fsPath,scheme:'file'}),parse:s=>({toString:()=>s})},
@@ -87,14 +104,15 @@ test('background ticks and clicks share one async read, avoid sync binding probe
     Module._load=function(name,...args){
       if(name==='vscode')return vscode;
       if(name==='./codex-history')return{configureCodexHistory(){},refreshCodexThreads:()=>holdHistory?new Promise(r=>{resolveHistory=r}):Promise.resolve(),matchCodexScreen:()=>undefined};
-      if(name==='./tmux')return{tmuxAvailable:()=>true,applyTmuxConf(){},listSessions:()=>{syncReads++;return snapshot()},listSessionsAsync:()=>{reads++;return new Promise(r=>{resolveRead=r})},attachedClientSessions:()=>new Map(liveIds.map((id,i)=>[500+i,id.slice(0,8)])),tmuxDiag:()=>'',hasTranscript:()=>false,liveCodexThreadId:()=>undefined};
+      if(name==='./tmux')return{tmuxAvailable:()=>true,applyTmuxConf(){},listSessions:()=>{syncReads++;throw Error('sync status reads forbidden even at startup')},listSessionsAsync:()=>{reads++;return holdReads?new Promise((r,j)=>{resolveRead=r;rejectRead=j}):Promise.resolve(snapshot())},attachedClientSessionsAsync:async()=>new Map(liveIds.map((id,i)=>[500+i,id.slice(0,8)])),tmuxDiag:()=>'',hasTranscript:()=>false,liveCodexThreadId:()=>undefined};
       if(name==='./sessions')return{transcriptCwds:()=>new Map()};
       return real.call(this,name,...args);
     };
     (async()=>{try{
       const ext=require('./out/extension');await ext.activate({subscriptions:[]});
       // Startup catch-ups are tested independently; isolate the normal 8s cadence and click here.
-      timeouts.length=0;syncReads=0;
+      assert.equal(syncReads,0,'startup and diagnostic logging must use async/cached reads');
+      timeouts.length=0;reads=0;syncReads=0;holdReads=true;
       const tick=intervals.find(i=>i.ms===8000).fn;
       const color=()=>provider.getTreeItem({kind:'tab',id:ids[0],group:'Test'}).iconPath.color?.id;
       assert.equal(color(),'charts.blue');
@@ -106,8 +124,10 @@ test('background ticks and clicks share one async read, avoid sync binding probe
       assert.equal(color(),'charts.green');assert.equal(syncReads,0,'normal polling/binding must not call listSessions again');
       // A direct diagnostic after a slower background read supersedes that old result.
       const old=tick();const stale=snapshot();working=true;
-      handlers.get('terminalTabs.diagDots')();assert.equal(color(),'charts.blue');
-      resolveRead(stale);await old;assert.equal(color(),'charts.blue','discard pre-action snapshot');
+      const direct=handlers.get('terminalTabs.diagDots')();
+      resolveRead(stale);await old;
+      for(let n=0;n<10;n++)await Promise.resolve();
+      resolveRead(snapshot());await direct;assert.equal(color(),'charts.blue','discard pre-action snapshot');
       // Metadata can be slow independently; live status must still poll on the next tick.
       holdHistory=true;const historyTick=tick();resolveRead(snapshot());
       for(let n=0;n<10&&!resolveHistory;n++)await Promise.resolve();
@@ -116,11 +136,17 @@ test('background ticks and clicks share one async read, avoid sync binding probe
       working=false;resolveRead(snapshot());await nextTick;
       assert.equal(color(),'charts.green','slow metadata cannot freeze the status timer');
       holdHistory=false;resolveHistory();await historyTick;
-      working=true;handlers.get('terminalTabs.diagDots')();
+      working=true;const force=handlers.get('terminalTabs.diagDots')();resolveRead(snapshot());await force;
+      // A failed transport cannot falsely stop chats or retain stale blue; a valid read recovers.
+      const failed=tick();rejectRead(Error('tmux timeout'));await failed;
+      assert.equal(color(),'descriptionForeground');
+      const recovered=tick();resolveRead(snapshot());await recovered;assert.equal(color(),'charts.blue');
       const last=tick();working=false;ext.deactivate();resolveRead(snapshot());await last;
       assert.equal(color(),'charts.blue','ignore result after deactivation');
       const before=reads;await tick();assert.equal(reads,before,'shutdown never starts another read');
+      console.log('PTT_RECOVERY_FIXTURE_COMPLETE');
     }finally{fs.rmSync(tmp,{recursive:true,force:true})}})().catch(e=>{console.error(e);process.exitCode=1});
   `],{cwd:require('node:path').join(__dirname,'..'),encoding:'utf8',timeout:10000});
   assert.equal(result.status,0,result.stderr||result.stdout);
+  assert.ok(result.stdout.includes('PTT_RECOVERY_FIXTURE_COMPLETE'),result.stderr||'fixture exited before completing assertions');
 });
