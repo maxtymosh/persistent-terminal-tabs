@@ -1,7 +1,7 @@
 ---
 id: "TASK-024"
 title: "Remove blocking status polling at 50 open chats"
-status: "done"
+status: "in-progress"
 priority: "P1"
 owner: "Max Tymoshyn"
 issue: null
@@ -55,3 +55,17 @@ Validation for 1.5.4: 50/100-session fixtures, 50-open activation with no synchr
 Loaded verification: native Restart Extensions applied 1.5.4 at 2026-11-08 00:28:43 UTC (Nov 7 local), adopting 26 existing native terminals with 28 live tmux sessions. The fresh status read at 00:28:53 took 2112 ms and resolved unknown=0, exercising the old deadline failure boundary on the real machine. All 28 pane-root PIDs in the immediately-pre-apply baseline remain after the final update. An earlier 29-pane baseline lost one session/saved record during ongoing interaction before this final update; cause/actor unverified and no universal preservation claim is made. No task command killed a session or forced a full window reload. The native action was needed because Developer Restart Extension Host alone retained the old extension descriptor.
 
 Public latest 1.5.4 targets 32cf3d4; all four anonymous assets, nested VSIX/checksums and uploaded digests verified. This closes the concrete PTT code/read failure repair, not a claim that subjective/system-wide lag is entirely gone. Both task-owned checkouts are eligible for normal retirement after their narrow evidence commits; retained branches and common Git lifecycle records hold source and separate removal events.
+
+## Reopened — Max still reports lag after 1.5.4
+
+Max: “it's still lagging tho”. Earlier implementation/test acceptance does not establish resolution of the user-visible issue. Keep TASK-024 open. No 1.5.5 or additional speculative code patch was produced.
+
+Fresh evidence: the initial machine reading showed load average 558.38 and about 7.1 GB swap used; renderer CPU spiked near 70% while the extension host was around 0.1%. A native extension-host profile spans 2901.862 seconds, with 2890.341 seconds classified idle; VS Code attributes 2162.73 ms of recorded activity to PTT. Direct reads inside the loaded extension host took 100–101 ms, ps 94–96 ms, with 2 ms maximum sampled timer delay. These do not rule out intermittent stalls outside the captured interaction.
+
+GPU A/B: original global terminal.integrated.gpuAcceleration was off, with no workspace override. Temporarily set workspace auto through the public VS Code API, then removed that override and verified the original off setting. Short uncontrolled renderer samples were 12.5% versus 12.6% of one core; no demonstrated improvement, so no permanent tuning retained. Current load later fell to around 3.34 and swap to about 5.9 GB, independently of any proven fix.
+
+Four live terminal focus changes acknowledged in 20–51 ms with 26 native terminals. This measures focus round-trip during the healthy interval, not typing/scrolling latency, cold reopen, 50 real live agents, or the user's worst lag. No message was typed/submitted to any chat. The CLI --status diagnostic was stopped because workspace-stat collection was long-running; no application, agent, tmux server or user job was killed.
+
+Remaining acceptance: capture the exact slow interaction under the affected workload and attribute the delay to terminal input/layout/rendering, process pressure or PTT before choosing another fix. Non-stop mode remains active, so no clarification prompt was sent. The profile, samples, scoped setting before/after/restoration and focus probe are retained under common Git norml/worktrees/ptt-recovery-artifacts.
+
+Worktree `ptt-render-profile-20261107`, branch `docs/remaining-terminal-lag`, base 6579c61; logical task remains owned by session codex-ptt-render-profile-20261107 and is parked for the uncaptured trigger. The source/evidence remain available without keeping this temporary docs checkout; its verified integration/removal events live in the common Git lifecycle record.
