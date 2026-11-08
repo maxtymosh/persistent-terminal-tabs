@@ -2,6 +2,12 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
+## 1.5.4 — prepared November 7, 2026
+
+- The live 1.5.3 follow-up reopens TASK-024. Source f2c7732 removes remaining synchronous extension status/client reads and automatic fd discovery, decouples history startup, tolerates asynchronous scheduling pressure and logs failed probes. Failed transport no longer implies stopped chats; unavailable client evidence cannot trigger startup terminal disposal.
+- Fourteen targeted checks pass, including 50-open activation and native transition/retention fixtures. Full serial suite passes 60/61 under contention; the unchanged 600 ms provider-timeout fixture passes separately. Six fresh native reads with 29 live sessions took 106–116 ms each, with zero unknown states or probe failures. These are healthy-interval measurements, not proof that all reported system lag is resolved.
+- Package, loaded-runtime and public-download evidence is recorded after verification. Marketplace retains its authentication blocker.
+
 ## 1.5.3 — published November 7, 2026
 
 - Max reports lag with a normal workload of 50 open chats. Background status checks previously took four synchronous tmux/process snapshots per tick; they now share one bounded asynchronous read, including concurrent clicks/catch-ups. Background Codex identity matching reuses the native title. Legacy Grok/Antigravity fd discovery stays on startup/explicit recap paths.
@@ -61,7 +67,7 @@ Publisher ID remains maxtymosh. Local vsce publisher inventory is empty; canonic
 
 The installable package passes vsce packaging. Marketplace submission is NOT complete. Microsoft's publisher sign-in page was opened. User was asked for explicit permission to complete publisher setup/upload through the website, because the user's browser-control rule bars silently replacing an unauthenticated CLI with browser operation. No browser session was read or controlled.
 
-Next step: complete Microsoft publisher sign-in through an approved supported route; inspect publisher identity and permissions, register maxtymosh if available and appropriate, and upload the current prepared 1.5.3 VSIX. Browser operation requires explicit approval under Max's standing rule; sign-in alone is allowed, but no login flow is opened during active non-stop mode. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
+Next step: complete Microsoft publisher sign-in through an approved supported route; inspect publisher identity and permissions, register maxtymosh if available and appropriate, and upload the current prepared 1.5.4 VSIX. Browser operation requires explicit approval under Max's standing rule; sign-in alone is allowed, but no login flow is opened during active non-stop mode. Do not claim published until Microsoft accepts it and the public listing/version is verified. Update README's Marketplace status only after listing verification. Store any resulting credential solely in the canonical OS-native secure store with a reference in the credentials registry.
 
 The earlier normlstudio/ptt-private-share handoff repository remains private; it is not the canonical public source.
 

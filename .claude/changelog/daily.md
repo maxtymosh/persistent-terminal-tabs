@@ -1,5 +1,11 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 7, 2026 — live status recovery follow-up
+
+- 1.5.3 was verified loaded, but Max reported persistent lag and grey/color flicker. Removed the remaining blocking startup/diagnostic/status consumers and client adoption. History metadata no longer gates panel startup; automatic legacy fd discovery is removed from startup as well as ticks.
+- Async probes allow eight seconds and emit failure diagnostics. Transport errors retain last observed attachment but clear work to unknown; cleanup skips failed evidence and unavailable adoption evidence cannot close existing terminals.
+- Fourteen targeted checks pass. Full serial suite passes 60/61 plus the unchanged timeout fixture separately under contention. Six reads of 29 real live sessions take 106–116 ms, all known; loaded/UI/public verification follows in public-release.md.
+
 ## Nov 7, 2026 — polling at 50 open chats
 
 - Replaced repeated blocking background tmux/process reads with one shared async snapshot; click refresh and startup catch-ups use the same in-flight read. Guard stale/shutdown results and keep slow history metadata independent from status polling.
