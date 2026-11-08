@@ -102,4 +102,4 @@ MIT © Max Tymoshyn. See [LICENSE](LICENSE).
 
 ## Development and QA
 
-See [contributing.md](contributing.md) for local checks, exact-source review evidence, required CI and package verification. The [pipeline contract](.claude/ci-cd.md) keeps native VS Code acceptance separate from fixture tests and public publication.
+See [contributing.md](contributing.md) for local checks, exact-source review evidence, required CI and package verification. The [pipeline contract](.claude/ci-cd/ci-cd.md) keeps native VS Code acceptance separate from fixture tests and public publication.

@@ -16,3 +16,5 @@ Do not put the fingerprint in the evidence document itself, which would create a
 Release admission additionally requires `releaseVerdict: Ship`, nativeQA `{status: pass, evidence: {path, sha256}}`, and releaseEvidence `{path, sha256}`. Actual native checks must precede those values; `releaseVerdict: Hold` is correct for pipeline-only source work. Do not copy a historical native PASS into a new source record.
 
 The automated gate checks integrity, coverage declarations and CI, not the truth of arbitrary prose. The reviewer remains responsible for checking evidence and scope. Review/QA must describe what was actually exercised; an automated declaration cannot turn mocks into native acceptance.
+
+The [central stage router](../../.claude/ci-cd/ci-cd.md) separates PR readiness, merge and release admission. A merged engineering record is a durable handoff, not release proof. The release task inventories all included commits and PRs, revalidates combined behavior and owns actual package/native delivery. Preserve historical records; write a fresh record for changed source.

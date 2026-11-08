@@ -16,3 +16,5 @@ Run affected cases on the actual candidate VSIX in a disposable profile and home
 Before/after session identity and saved-record counts establish preservation. Screenshots establish appearance, not process identity; fixture assertions establish code behavior, not real UI acceptance. Keep those evidence types separate.
 
 A remaining blocked criterion keeps its parent acceptance open. Existing TASK-024 freezing acceptance remains open until the affected normal workload is observed; this pipeline does not close it.
+
+The [release stage](../../.claude/ci-cd/release.md) selects combined journeys from its full inclusion inventory and consumes this checklist. A separate release owns unresolved native delivery; a completed feature merge does not require its original chat or checkout to remain open.
