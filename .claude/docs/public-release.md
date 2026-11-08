@@ -2,12 +2,13 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.5.5 — packaging November 7, 2026
+## 1.5.5 — published November 7, 2026
 
 - Runtime 96d3ef4 and evidence ed8c4eb are on origin/main. All 67 checks pass, including 50 in-memory terminal mocks; no real synthetic chats were launched. Live reattachment bypasses cold discovery, missing-pane opens preserve existing views, and automatic recap is globally serialized after yielding.
 - Independent live CPU incident traced to Python Environments 1.42.0 workspace scans. Disabled that extension only in Work Root and verified zero rg workers afterward. PTT autoRecapOnOpen remains temporarily false there. This incident mitigation is not bundled into the public extension and does not establish complete workload acceptance.
-- Package, installed runtime, loaded version and anonymous download verification pending. Marketplace retains the recorded authentication blocker.
-- Release worktree ptt-release-155-20261108, branch release/ptt-155, base ed8c4eb; durable lifecycle/evidence in common Git norml/worktrees. Feature source checkout ptt-open-lag-20261108 is integrated; retirement is separate from integration.
+- All 18 packaged and installed runtime modules match final compiled output. Native Restart Extensions loaded 1.5.5 at 2026-11-08 03:27:33 UTC. All 27 pre-install tmux pane-root processes remain present; no real synthetic chats were launched. Latest public https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.5 targets 2bb7d97185a59bb6335d6ef75d1e55fabf0a2ae7 on origin/main. All four anonymous downloads, GitHub SHA-256 digests and nested VSIX/checksums match. Marketplace retains the recorded authentication blocker.
+- Later system check: zero VS Code rg workers, CPU 56.81% idle, one-minute load average 7.01. Memory pressure remains (about 7.1 GB swap); this confirms removal of the search storm, not complete subjective performance acceptance.
+- Release worktree ptt-release-155-20261108, branch release/ptt-155, base ed8c4eb; durable lifecycle/evidence in common Git norml/worktrees. Feature source checkout ptt-open-lag-20261108 integrated in ed8c4eb and normally removed after preservation/consumer gates; path and registration absence verified and closeout checker passed. Release checkout retirement follows the same gates after this evidence commit; no remaining Marketplace continuation needs the build directory.
 
 ## 1.5.4 — published November 7, 2026
 
