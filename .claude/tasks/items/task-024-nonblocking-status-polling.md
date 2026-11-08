@@ -1,7 +1,7 @@
 ---
 id: "TASK-024"
 title: "Remove blocking status polling at 50 open chats"
-status: "in-progress"
+status: "done"
 priority: "P1"
 owner: "Max Tymoshyn"
 issue: null
@@ -51,3 +51,7 @@ Repair: remove all direct synchronous listSessions calls from extension UI/start
 Worktree `ptt-status-recovery-20261107`, branch `fix/status-read-recovery`, base 29f8c6c. Own renewed logical-task claim 827e55c1991440ac864494feeb15160b. Prior worktree was already normally removed; the new record lives under common Git norml/worktrees. Release documentation uses its separate retained task and checkout. Integration, activation verification and final closeout follow the acceptance checks.
 
 Validation for 1.5.4: 50/100-session fixtures, 50-open activation with no synchronous status calls, slow 2.1-second successful process read, failed transport/recovery, stale-generation/shutdown and terminal retention after unavailable adoption evidence. Full serial suite passed 60/61 under contention; the unchanged 600 ms provider fallback fixture passes separately. Targeted acceptance is rerun after the adoption safeguard. No unrelated test budget was changed.
+
+Loaded verification: native Restart Extensions applied 1.5.4 at 2026-11-08 00:28:43 UTC (Nov 7 local), adopting 26 existing native terminals with 28 live tmux sessions. The fresh status read at 00:28:53 took 2112 ms and resolved unknown=0, exercising the old deadline failure boundary on the real machine. All 28 pane-root PIDs in the immediately-pre-apply baseline remain after the final update. An earlier 29-pane baseline lost one session/saved record during ongoing interaction before this final update; cause/actor unverified and no universal preservation claim is made. No task command killed a session or forced a full window reload. The native action was needed because Developer Restart Extension Host alone retained the old extension descriptor.
+
+Public latest 1.5.4 targets 32cf3d4; all four anonymous assets, nested VSIX/checksums and uploaded digests verified. This closes the concrete PTT code/read failure repair, not a claim that subjective/system-wide lag is entirely gone. Both task-owned checkouts are eligible for normal retirement after their narrow evidence commits; retained branches and common Git lifecycle records hold source and separate removal events.
