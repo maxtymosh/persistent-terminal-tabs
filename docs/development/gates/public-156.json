@@ -5,55 +5,55 @@
   "reviewer": "Codex owning-session self-review for Max Tymoshyn",
   "verdict": "Ship",
   "baseRevision": "36b858411810a93a06b194f0af055d3ec1a52ff5",
-  "sourceSha256": "5baf81b355cdcd2aadc6c751cb956da35760de45aaf72303699cfad2515e214a",
+  "sourceSha256": "6e6b92db686dd9124d1cd326cd486c2493ccf3abb66f83be745e8a4472e0fb86",
   "checks": {
     "review": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-156-verification.md",
-        "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+        "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
       }
     },
     "tests": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-156-verification.md",
-        "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+        "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
       }
     },
     "behavior": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-156-verification.md",
-        "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+        "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
       }
     },
     "dependencyAudit": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-156-verification.md",
-        "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+        "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
       }
     },
     "maps": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-156-verification.md",
-        "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+        "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
       }
     },
     "ownership": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-156-verification.md",
-        "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+        "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
       }
     },
     "acceptance": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-156-verification.md",
-        "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+        "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
       }
     }
   },
@@ -62,11 +62,11 @@
     "status": "pass",
     "evidence": {
       "path": "docs/development/public-156-verification.md",
-      "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+      "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
     }
   },
   "releaseEvidence": {
     "path": "docs/development/public-156-verification.md",
-    "sha256": "d86f6d128b8f41c20299e97467194a2cd300e98034c3efc7b1406d7e37da65b0"
+    "sha256": "4e1d7e92ab2fdafff3eec0cfceacc94d76e81d49fee583b01f5ba7641bbb5e88"
   }
 }

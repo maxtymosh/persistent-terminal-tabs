@@ -43,8 +43,15 @@ Owning-session review inspected the full inclusion diff, release prose, target/v
 
 Frozen installer, native result/harness, test/package logs, and subsequent delivery/download receipts are retained outside the temporary checkout in the common Git artifact home for `ptt-public-156`. The previous immutable public 1.5.5 remains the recovery version. Publication must use the frozen file, never regenerated qa-artifacts bytes. After release admission, guarded source integration and exact CI, deliver via `gh release create`, then verify tag, asset digests, anonymous downloads and nested bundle checksums.
 
-Scoped review verdict: **Ship**. Native affected-journey verdict: **Pass**, with fixture/provider boundaries above. GitHub release verdict: **Ship**. Delivery is pending until public readback is recorded.
+Scoped review verdict: **Ship**. Native affected-journey verdict: **Pass**, with fixture/provider boundaries above. GitHub release verdict: **Ship**. Delivery verified: https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.6. Tag targets `c4c95779ce3e2d8a1d71148203ee11d31930b3b7`; all four anonymous downloads, GitHub API digests and nested bundle/VSIX checksums match. Exact PR4 Quality run 42672423822 passed after two GitHub internal-server errors during the Actions incident. This receipt update changes documentation only; runtime/source package inputs remain identical to the qualified release.
 
 ## Worktree lifecycle
 
 `ptt-public-156` created from 36b8584, owned by the release task; source integration and eligible checkout retirement follow public delivery. Durable lifecycle records retain merge and removal separately. Required installers/evidence live outside the checkout.
+
+## Public artifact digests
+
+- `install-prompt.md`: `sha256:7bfbf2804155e25c60c88259ebc9804c3701eef71c4661402a00b7101bfce042`
+- `persistent-terminal-tabs-1.5.6.vsix`: `sha256:568c63de55fcef159b4a24021f76108a522e2383231331fae615d11ba13e212b`
+- `ptt-install-bundle-1.5.6.zip`: `sha256:e2fe5da5e112c3561ea71ba9a0b8ae7fe436824c64c9f4282787109f75cc8ae8`
+- `sha256sums.txt`: `sha256:ad8c2791e429a9335b56262d40dc21c5bb02249f0bfa54ef9954aa3b9e9f1e0c`
