@@ -1,3 +1,4 @@
+import { findCodexRollout, codexRollout, shellQuote } from './codex-profile';
 import { foregroundAgentDetails, parseProcessSnapshot, PaneProcess } from './working-status';
 import { claudeStatus, ClaudeStatus } from './claude-status';
 import { AgentStatus, resolveAgentStatus } from './agent-status';
@@ -251,7 +252,7 @@ export function tmuxLaunch(
   const shell = process.env.SHELL || '/bin/zsh';
   // A note is echoed once at the top of a clean shell — used for "cannot auto-resume" explanations so a dead
   // folder never yields a silent empty terminal. Sanitized: the whole script rides inside single quotes below.
-  const banner = note ? `echo ${JSON.stringify(note.replace(/'/g, ''))}; ` : '';
+  const banner = note ? `printf '%s\\n' ${shellQuote(note)}; ` : '';
   const extras = extraExports ? ` ${extraExports}` : '';
   let script: string;
   if (!hasPrior) {
@@ -265,10 +266,10 @@ export function tmuxLaunch(
     const inner = tpl ? `${agent.command} ${tpl}` : agent.command;
     script =
       `export DISABLE_AUTO_COMPACT=1 TT_SESSION_ID="${id}"${extras}; ${inner}; __tt=$?; ` +
-      `if [ $__tt -ne 0 ]; then export TT_RESUME_CMD="${inner}" TT_RESUME_STATUS=$__tt ZDOTDIR="${TT_DIR}"; exec ${shell} -i; ` +
+      `if [ $__tt -ne 0 ]; then export TT_RESUME_CMD=${shellQuote(inner)} TT_RESUME_STATUS=$__tt ZDOTDIR="${TT_DIR}"; exec ${shell} -i; ` +
       `else exec ${shell} -i; fi`;
   }
-  const command = `${shell} -l -c '${script}'`;
+  const command = `${shell} -l -c ${shellQuote(script)}`;
   return {
     shellPath: tmux,
     shellArgs: [
@@ -284,27 +285,11 @@ export function tmuxAttach(id: string): { shellPath: string; shellArgs: string[]
   return tmux ? { shellPath: tmux, shellArgs: [...socketArgs(), 'attach-session', '-t', sessionName(id)] } : null;
 }
 
-/** Best-effort exact rollout lookup under ~/.codex/sessions. */
-function codexSessionFile(id: string): string | undefined {
-  const root = path.join(os.homedir(), '.codex', 'sessions');
-  const stack = [root];
-  let scanned = 0;
-  try {
-    while (stack.length && scanned < 20000) {
-      const dir = stack.pop() as string;
-      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-        scanned++;
-        if (e.isDirectory()) stack.push(path.join(dir, e.name));
-        else if (e.name.includes(id) && e.name.endsWith('.jsonl')) return path.join(dir, e.name);
-      }
-    }
-  } catch { /* no codex sessions yet */ }
-  return undefined;
+function codexSessionFile(id: string, home?: string): string | undefined {
+  return findCodexRollout(id, home)?.file;
 }
-
-/** Best-effort: does a Codex session transcript for this id already exist under ~/.codex/sessions? */
-export function hasCodexSession(id: string): boolean {
-  return !!cachedCodexThread(id) || !!codexSessionFile(id);
+export function hasCodexSession(id: string, home?: string): boolean {
+  return !!cachedCodexThread(id, home) || !!codexSessionFile(id, home);
 }
 
 function grokSessionDir(id: string): string | undefined {
@@ -369,6 +354,7 @@ export interface TmuxSessionInfo {
   attached: boolean;
   command: string;  // foreground command in the active pane
   title: string;    // agent-authored OSC title; read alongside verified process ownership
+  agentPid?: number; // verified foreground owner, excluding tools/children
   agentCommand?: string; // verified live foreground agent, including shell-wrapped launches
   claudeStatus?: ClaudeStatus; // native process-bound lifecycle state, never inferred from its static title
   working: boolean;
@@ -476,6 +462,7 @@ function sessionSnapshot(raw: string, processes: Map<string, PaneProcess>): Tmux
       command: command || '',
       title: title.join('|'),
       agentCommand: agent?.name,
+      agentPid: agent ? Number(agent.process.pid) : undefined,
       claudeStatus: nativeStatus,
       working: status.state === 'working',
       status,
@@ -607,7 +594,7 @@ export function liveCodexTranscript(id: string): string | undefined {
     const lsof = ['/usr/sbin/lsof', '/usr/bin/lsof'].find((candidate) => fs.existsSync(candidate)) ?? 'lsof';
     const raw = cp.execFileSync(lsof, ['-Fn', '-p', pids.join(',')], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
     const files = raw.split('\n')
-      .filter((line) => line.startsWith('n') && /\/\.codex\/sessions\/.*\.jsonl$/.test(line.slice(1)))
+      .filter((line) => line.startsWith('n') && !!codexRollout(line.slice(1)))
       .map((line) => line.slice(1));
     let newest: { file: string; mtime: number } | undefined;
     for (const file of files) {

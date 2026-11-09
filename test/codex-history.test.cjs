@@ -20,6 +20,7 @@ test('full footer or terminal title identifies one chat; duplicates and truncati
 test('paginated Codex history uses only read APIs, keeps exact identity, and includes latest messages', async t => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ptt-history-'));
   t.after(() => fs.rmSync(dir, {recursive:true, force:true}));
+  const originalHome = os.homedir; os.homedir = () => dir; t.after(() => { os.homedir = originalHome; });
   const cli = path.join(dir, 'codex'); const trace = path.join(dir, 'calls');
   fs.writeFileSync(cli, `#!${process.execPath}\n
     const fs=require('fs'), rl=require('readline').createInterface({input:process.stdin});

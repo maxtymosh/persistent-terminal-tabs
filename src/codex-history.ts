@@ -1,3 +1,5 @@
+import { codexHomes } from './codex-profile';
+import * as fs from 'fs';
 import { codexConversationTitle } from './working-status';
 import * as cp from 'child_process';
 import { resolveCommand } from './recap-providers';
@@ -6,7 +8,7 @@ import { resolveCommand } from './recap-providers';
  * Modern Codex stores paginated history without a rollout file or an open JSONL fd.
  * A private stdio server reads that history; it never resumes a thread or starts a turn.
  */
-export interface CodexThread { id: string; name: string | null; cwd: string; updatedAt: number; historyMode?: string }
+export interface CodexThread { id: string; name: string | null; cwd: string; updatedAt: number; historyMode?: string; codexHome?: string }
 interface Page<T> { data: T[]; nextCursor?: string | null }
 interface ItemEntry { item: { id: string; type: string; text?: string; content?: Array<{ type: string; text?: string }> } }
 const threads = new Map<string, CodexThread>();
@@ -14,7 +16,10 @@ let command = 'codex';
 let refreshing: Promise<void> | undefined;
 let refreshedAt = 0;
 export function configureCodexHistory(cli: string): void { command = cli; }
-export function cachedCodexThread(id: string): CodexThread | undefined { return threads.get(id); }
+export function cachedCodexThread(id: string, home?: string): CodexThread | undefined {
+  const found = [...threads.values()].filter(t => t.id === id && (!home || t.codexHome === home));
+  return found.length === 1 ? found[0] : undefined;
+}
 
 export class CodexReader {
   private child: cp.ChildProcessWithoutNullStreams;
@@ -22,8 +27,8 @@ export class CodexReader {
   private closed = false;
   private buffer = '';
   private pending = new Map<number, { resolve: (r: any) => void; reject: (e: Error) => void; timer: NodeJS.Timeout }>();
-  constructor(cli = command) {
-    this.child = cp.spawn(resolveCommand(cli), ['app-server', '--stdio'], { stdio: 'pipe' });
+  constructor(cli = command, home?: string) {
+    this.child = cp.spawn(resolveCommand(cli), ['app-server', '--stdio'], { stdio: 'pipe', env: home ? { ...process.env, CODEX_HOME: home } : process.env });
     this.child.stderr.resume(); // never persist runtime logs or source conversation text
     this.child.stdout.setEncoding('utf8');
     this.child.stdout.on('data', (chunk: string) => {
@@ -74,35 +79,42 @@ export function refreshCodexThreads(force = false): Promise<void> {
   if (!force && Date.now() - refreshedAt < 30000) return Promise.resolve();
   refreshedAt = Date.now();
   refreshing = (async () => {
-    const reader = new CodexReader();
+    const homes = codexHomes().filter(home => fs.existsSync(home));
+    for (const home of homes.length ? homes : [undefined]) {
+    const reader = new CodexReader(command, home);
     try {
       await reader.initialize();
+      const fresh = new Map<string, CodexThread>();
       let cursor: string | undefined;
       for (let page = 0; page < 50; page++) {
         const result = await reader.request<Page<CodexThread>>('thread/list', { limit: 100, cursor, useStateDbOnly: true, sortKey: 'updated_at' });
-        for (const thread of result.data) threads.set(thread.id, thread);
+        for (const thread of result.data) fresh.set(`${home ?? ""}\0${thread.id}`, { ...thread, codexHome: home });
         if (!result.nextCursor) break;
         cursor = result.nextCursor;
       }
-    } finally { reader.close(); }
+      for (const [key, thread] of threads) if (thread.codexHome === home) threads.delete(key);
+      for (const [key, thread] of fresh) threads.set(key, thread);
+    } catch { /* A missing profile never suppresses other profiles. */ } finally { reader.close(); }
+    }
   })().finally(() => { refreshing = undefined; });
   return refreshing;
 }
 
 /** Only a complete unique TUI footer or OSC terminal title qualifies. Truncation/duplicate names stay unbound. */
-export function matchCodexScreen(screen: string, candidates: Iterable<CodexThread> = threads.values(), paneTitle = ''): CodexThread | undefined {
+export function matchCodexScreen(screen: string, candidates: Iterable<CodexThread> = threads.values(), paneTitle = '', home?: string): CodexThread | undefined {
   paneTitle = codexConversationTitle(paneTitle);
   const footer = screen.split('\n').slice(-8).map(x => x.trim()).filter(x => /(?:GPT-|gpt-|o[134][ -]).* · /.test(x));
-  const matches = [...candidates].filter(t => t.name && (footer.some(line => line.endsWith(` · ${t.name}`)) || paneTitle === t.name || paneTitle.startsWith(`${t.name} | `)));
+  const matches = [...candidates].filter(t => (!home || t.codexHome === home) && t.name && (footer.some(line => line.endsWith(` · ${t.name}`)) || paneTitle === t.name || paneTitle.startsWith(`${t.name} | `)));
   return matches.length === 1 ? matches[0] : undefined;
 }
 
-export async function codexConversation(id: string): Promise<{ thread: CodexThread; messages: Array<{ role: string; text: string }> }> {
-  const reader = new CodexReader();
+export async function codexConversation(id: string, home?: string): Promise<{ thread: CodexThread; messages: Array<{ role: string; text: string }> }> {
+  home ??= cachedCodexThread(id)?.codexHome;
+  const reader = new CodexReader(command, home);
   try {
     await reader.initialize();
     const { thread } = await reader.request<{ thread: CodexThread }>('thread/read', { threadId: id, includeTurns: false });
-    threads.set(thread.id, thread);
+    threads.set(`${home ?? ""}\0${thread.id}`, { ...thread, codexHome: home });
     const first = await reader.request<Page<ItemEntry>>('thread/items/list', { threadId: id, limit: 30, sortDirection: 'asc' });
     const recent: ItemEntry[] = [];
     let cursor: string | undefined;
