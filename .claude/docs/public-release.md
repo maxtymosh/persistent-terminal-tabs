@@ -2,6 +2,12 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
+## 1.5.6 — qualified for GitHub publication November 9, 2026
+
+- User-authorized public update; current release owner transferred explicitly. Runtime from PR #3 / 36b8584; full changes since 1.5.5 include PR #1 engineering gates and PR #2 stage documentation. Combined qualification: [public-156-verification](../../docs/development/public-156-verification.md).
+- 76 tests and required checks pass on Node 22.22.2. Six native VS Code lifecycle cases pass against the exact public candidate's extracted modules. All 19 runtime modules equal the locally installed 1.5.6; embedded installation docs updated. Native provider/authentication and normal-workload limits remain explicit in the qualification.
+- Frozen VSIX SHA-256: `568c63de55fcef159b4a24021f76108a522e2383231331fae615d11ba13e212b`. Public release is pending delivery readback. Marketplace remains authentication-blocked; no local reinstall or user-session restart is part of this publication.
+
 ## 1.5.5 — published November 7, 2026
 
 - Runtime 96d3ef4 and evidence ed8c4eb are on origin/main. All 67 checks pass, including 50 in-memory terminal mocks; no real synthetic chats were launched. Live reattachment bypasses cold discovery, missing-pane opens preserve existing views, and automatic recap is globally serialized after yielding.
