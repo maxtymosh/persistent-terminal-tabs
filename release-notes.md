@@ -1,9 +1,11 @@
-# Persistent Terminal Tabs 1.5.5
+# Persistent Terminal Tabs 1.5.6
 
-Opening a running chat now reconnects directly to tmux. It skips cold conversation discovery and configuration rewrites. Opening one missing pane preserves existing separate terminals and the correctly ordered split prefix, instead of rebuilding the entire group.
+Saved Codex tabs now retain the conversation ID and its profile, including separate CLI profiles. Reopening a stopped session uses that saved identity instead of leaving an empty shell or looking for a Claude conversation.
 
-Automatic AI recaps yield before inspecting history and run one provider at a time. They use established conversation identities; manual recap can still discover an unbound conversation. Failed live attachment retains the saved chat.
+Per-tab binding records survive older workspace snapshots. Missing or ambiguous history keeps the saved tab and reports the problem. Recaps use the exact bound conversation rather than choosing the newest conversation in a folder.
 
-All 67 automated checks pass. The 50-chat regression fixtures use in-memory terminal objects; they do not launch 50 real terminals or agents. Native workload acceptance remains open, so this release does not claim that every cause of system-wide freezing is resolved.
+Validation: 76 automated tests, strict type checking, lint and package verification. Native VS Code lifecycle checks cover reattachment, extension reactivation and cold restore with a controlled CLI fixture; live Codex identity discovery was checked separately. These checks do not establish every provider authentication flow or resolve the existing normal-workload freezing report.
 
-Download `persistent-terminal-tabs-1.5.5.vsix` and use **Extensions: Install from VSIX**. Restart extensions to load it. The `ptt-install-bundle-1.5.5.zip` contains the VSIX, install prompt, README, status guide and checksums. Marketplace submission still requires Microsoft publisher authentication.
+Download `persistent-terminal-tabs-1.5.6.vsix` and use **Extensions: Install from VSIX**, then **Developer: Restart Extensions**. The `ptt-install-bundle-1.5.6.zip` includes the VSIX, installation prompt, README, status guide and checksums. Existing saved tabs and conversation files are retained. No account login or session migration is performed by this update.
+
+Marketplace publication remains pending Microsoft publisher authentication. GitHub VSIX updates are installed manually.

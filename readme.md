@@ -20,14 +20,14 @@ Free and open source, under the MIT license. Works with Claude Code, OpenAI Code
 ## Install
 
 1. [Download the latest release](https://github.com/maxtymosh/persistent-terminal-tabs/releases/latest).
-2. Download its `persistent-terminal-tabs-1.5.5.vsix` asset.
+2. Download its `persistent-terminal-tabs-1.5.6.vsix` asset.
 3. In VS Code, open the Command Palette → **Extensions: Install from VSIX** and select that file.
 4. Run **Developer: Reload Window** after saving your work.
 
 Or use the VS Code CLI:
 
 ```sh
-code --install-extension persistent-terminal-tabs-1.5.5.vsix
+code --install-extension persistent-terminal-tabs-1.5.6.vsix
 ```
 
 The release also includes a ZIP with the extension and an [AI installation prompt](install-prompt.md) that you can give to a coding assistant with access to your computer. No source build is required.
