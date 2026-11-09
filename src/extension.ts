@@ -1,7 +1,9 @@
+import { codexRollout, findCodexRollout, probeCodexBindings, shellQuote, registerCodexHome } from './codex-profile';
+import { resolveCommand } from './recap-providers';
 import { isAgentWorking } from './working-status';
 import { dockBesideTerminal, hasExistingPttState, initializeViewLocation } from './view-location';
 import { AgentStatus, UNKNOWN_STATUS } from './agent-status';
-import { configureCodexHistory, matchCodexScreen, refreshCodexThreads } from './codex-history';
+import { cachedCodexThread, configureCodexHistory, matchCodexScreen, refreshCodexThreads } from './codex-history';
 import * as vscode from 'vscode';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
@@ -251,11 +253,6 @@ function pokeDots(): void {
   }, 0);
 }
 
-/** UUID from a Codex rollout path, if this is one of Codex's active JSONL files. */
-function codexIdFromTranscript(file: string | undefined): string | undefined {
-  return file?.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i)?.[1];
-}
-
 /**
  * Permanently bind legacy Claude-labelled PTT tabs to the actual Codex rollout currently running in their tmux
  * pane. This is deliberately independent of recaps: a reload must be able to resume the right Codex chat even
@@ -264,6 +261,7 @@ function codexIdFromTranscript(file: string | undefined): string | undefined {
  */
 function bindLiveCodexSessions(background = false): boolean {
   if (!useTmux) return false;
+  captureCodexBindings();
   const candidates = sessionSnapshot.filter((s) => s.agentCommand === 'codex' || /\bcodex\b/i.test(s.command));
   const newlyBound: string[] = [];
   for (const session of candidates) {
@@ -273,14 +271,21 @@ function bindLiveCodexSessions(background = false): boolean {
     const meta = store.meta(id);
     if (!meta) continue;
     // OSC title is already in the shared snapshot. Background ticks must not recapture every pane or run lsof.
-    const observed = background ? matchCodexScreen('', undefined, session.title)?.id : liveCodexThreadId(session.id);
-    const codexSessionId = observed ?? (!background && !meta.codexSessionId ? codexIdFromTranscript(liveCodexTranscript(session.id)) : undefined);
-    if (codexSessionId === meta.codexSessionId) continue;
+    const observation = observedCodexHomes.get(session.id);
+    const homeHint = observation?.pid === session.agentPid ? observation?.home : meta.codexHome;
+    const matched = matchCodexScreen('', undefined, session.title, homeHint);
+    const file = !background && !meta.codexSessionId ? liveCodexTranscript(session.id) : undefined;
+    const exact = file ? codexRollout(file) : undefined;
+    const codexSessionId = exact?.id ?? matched?.id;
+    const home = exact?.home ?? matched?.codexHome;
+    if (!home) continue;
+    if (codexSessionId === meta.codexSessionId && home === meta.codexHome) continue;
     if (!codexSessionId) continue;
     meta.codexSessionId = codexSessionId;
+    meta.codexHome = home;
     meta.recapAgent = 'codex';
     meta.recapSessionId = codexSessionId;
-    rememberCodexLink(id, codexSessionId);
+    rememberCodexLink(id, codexSessionId, home);
     newlyBound.push(id);
   }
   if (!newlyBound.length) return false;
@@ -291,6 +296,44 @@ function bindLiveCodexSessions(background = false): boolean {
   }
   log(`⌁ bound ${newlyBound.length} live Codex tab(s) to their exact rollout`);
   return true;
+}
+
+let bindingProbe: Promise<void> | undefined;
+let bindingProbeAt = 0;
+const observedCodexHomes = new Map<string, { pid: number; home: string }>();
+function captureCodexBindings(): void {
+  if (bindingProbe || shuttingDown || Date.now() - bindingProbeAt < 30000) return;
+  const pending = sessionSnapshot.filter(s => s.agentCommand === 'codex' && s.agentPid);
+  if (!pending.length) return;
+  const ownerStore = store;
+  bindingProbeAt = Date.now();
+  bindingProbe = probeCodexBindings(pending.map(s => s.agentPid!)).then(bindings => {
+    if (shuttingDown || store !== ownerStore) return;
+    let changed = false;
+    for (const session of pending) {
+      if (!sessionSnapshot.some(s => s.id === session.id && s.agentPid === session.agentPid && s.agentCommand === 'codex' && s.title === session.title)) continue;
+      const id = store.allIds().find(saved => saved.startsWith(session.id));
+      const meta = id && store.meta(id);
+      const observation = bindings.get(session.agentPid!);
+      if (id && meta && observation) {
+        registerCodexHome(observation.home);
+        observedCodexHomes.set(session.id, { pid: session.agentPid!, home: observation.home });
+        if (!meta.codexSessionId && meta.codexHome !== observation.home) {
+          meta.codexHome = observation.home; meta.agent = 'codex'; changed = true;
+        }
+      }
+      const binding = observation?.id ? observation : undefined;
+      if (!id || !meta || !binding?.id || (meta.codexSessionId === binding.id && meta.codexHome === binding.home)) continue;
+      rememberCodexLink(id, binding.id, binding.home);
+      meta.codexSessionId = binding.id;
+      meta.codexHome = binding.home;
+      meta.recapAgent = 'codex';
+      meta.recapSessionId = binding.id;
+      changed = true;
+    }
+    if (changed) { store.save(); tree?.refresh(); log('Captured exact Codex conversation/profile bindings'); }
+  }).catch(() => log('Codex identity capture unavailable; existing bindings retained'))
+    .finally(() => { bindingProbe = undefined; });
 }
 
 /**
@@ -526,20 +569,28 @@ function openTerminal(id: string, meta: SessionMeta, restored: boolean): vscode.
   // Auto-resume ONLY when a transcript actually exists; otherwise open a CLEAN shell (no auto-claude) so Max can
   // cd + run claude himself. This also keeps DATA-SAFETY: we NEVER auto `--session-id` (which could overwrite a
   // transcript) — a new session is pinned only when Max types `claude` (the wrapper picks --session-id vs --resume).
-  const prior = hasPriorSession(resumeId, realCwd, kind);
+  const profile = kind === 'codex' ? meta.codexHome ?? findCodexRollout(resumeId)?.home : undefined;
+  if (kind === 'codex' && profile && profile !== meta.codexHome && codexSessionId) {
+    rememberCodexLink(id, codexSessionId, profile); meta.codexHome = profile; store.save();
+  }
+  const prior = kind === 'codex' ? !!profile && hasCodexSession(resumeId, profile) : hasPriorSession(resumeId, realCwd, kind);
   // ORPHANED + prior would auto-run a resume that CANNOT succeed: `claude --resume` only finds a transcript from
   // a dir munging to its project folder, and that folder's cwd is gone from disk. Auto-running it bricked the tab
   // ("No conversation found" → pre-fill → same error forever). Open a clean shell with an explanation instead.
-  const doomed = prior && orphaned && kind === 'claude';
+  const doomed = prior && orphaned;
   const note = doomed
-    ? `PTT: this chats folder is gone/moved (was: ${recordedCwd ?? 'unknown'}). Restore or recreate that folder, cd into it, then run: command claude --resume ${id}`
-    : undefined;
+    ? `PTT: this chats folder is gone/moved (was: ${recordedCwd ?? 'unknown'}). Restore the folder before resuming ${kind} conversation ${resumeId}. Your tab is preserved.`
+    : kind === 'codex' && restored && !prior
+      ? `PTT: saved Codex conversation ${resumeId} could not be verified in its profile (${profile ?? 'unknown'}). Your tab is preserved; no replacement conversation was started.`
+      : undefined;
   const pins = [
     grokSessionId && grokSessionId !== id ? `TT_GROK_SESSION_ID="${grokSessionId}"` : '',
     agySessionId && agySessionId !== id ? `TT_AGY_SESSION_ID="${agySessionId}"` : '',
   ].filter(Boolean).join(' ');
   const launch = useTmux
-    ? tmuxLaunch(id, realCwd, agentSpec(kind), prior && !doomed, note, resumeId, pins)
+    ? tmuxLaunch(id, realCwd, kind === 'codex' && profile
+      ? { ...agentSpec(kind), command: `env CODEX_HOME=${shellQuote(profile)} ${shellQuote(resolveCommand(agentSpec(kind).command))}` }
+      : agentSpec(kind), prior && !doomed, note, resumeId, pins)
     : null;
   if (launch) {
     opts.shellPath = launch.shellPath;
@@ -853,7 +904,7 @@ function recapBindId(r: Recap): string | undefined {
 
 function recapOptions(id: string, m?: SessionMeta): RecapOptions {
   const modern = liveCodexThreadId(id);
-  if (modern) return { preferCodex: true, codexSessionId: modern, cwd: m?.cwd };
+  if (modern) return { preferCodex: true, codexSessionId: modern, codexHome: cachedCodexThread(modern)?.codexHome, cwd: m?.cwd };
   const liveAgy = liveAgyTranscript(id);
   if (liveAgy) {
     return { cwd: m?.cwd, preferAgy: true, agySessionId: agySessionIdFromFile(liveAgy) };
@@ -871,10 +922,10 @@ function recapOptions(id: string, m?: SessionMeta): RecapOptions {
   const live = liveCodexTranscript(id);
   if (live) {
     const match = live.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i);
-    return { cwd: m?.cwd, preferCodex: true, codexSessionId: match?.[1] };
+    return { cwd: m?.cwd, preferCodex: true, codexSessionId: match?.[1], codexHome: codexRollout(live)?.home };
   }
   if (m?.codexSessionId || m?.recapAgent === 'codex' || m?.agent === 'codex') {
-    return { cwd: m?.cwd, preferCodex: true, codexSessionId: m?.codexSessionId ?? m?.recapSessionId };
+    return { cwd: m?.cwd, preferCodex: true, codexSessionId: m?.codexSessionId ?? m?.recapSessionId, codexHome: m?.codexHome };
   }
   return {};
 }
@@ -894,7 +945,8 @@ function rememberRecapSource(id: string, meta: SessionMeta, opts: RecapOptions, 
     meta.recapAgent = 'codex';
     meta.recapSessionId = sessionId ?? opts.codexSessionId;
     meta.codexSessionId = sessionId ?? opts.codexSessionId ?? meta.codexSessionId;
-    if (meta.codexSessionId) rememberCodexLink(id, meta.codexSessionId);
+    meta.codexHome = opts.codexHome ?? meta.codexHome;
+    if (meta.codexSessionId) rememberCodexLink(id, meta.codexSessionId, meta.codexHome);
   } else if (source === 'claude') {
     meta.recapAgent = 'claude';
     meta.recapSessionId = undefined;
@@ -950,7 +1002,7 @@ function automaticRecapOptions(id: string, meta: SessionMeta): RecapOptions | un
   const kind = live ?? (meta.agySessionId ? 'agy' : meta.grokSessionId ? 'grok' : meta.codexSessionId ? 'codex' : meta.recapAgent ?? meta.agent ?? 'claude');
   if (kind === 'codex') {
     const codexSessionId = meta.codexSessionId ?? (meta.recapAgent === 'codex' ? meta.recapSessionId : undefined);
-    return codexSessionId ? { cwd: meta.cwd, preferCodex: true, codexSessionId } : undefined;
+    return codexSessionId ? { cwd: meta.cwd, preferCodex: true, codexSessionId, codexHome: meta.codexHome } : undefined;
   }
   if (kind === 'grok') {
     const grokSessionId = meta.grokSessionId ?? (meta.recapAgent === 'grok' ? meta.recapSessionId : undefined);
@@ -1733,6 +1785,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const dotTimer = setInterval(async () => {
       if (shuttingDown) return;
       if (await pollAlive() && !shuttingDown) tree?.refresh();
+      captureCodexBindings();
       // Slow history metadata must not hold up later live-status snapshots.
       if (historyPolling || shuttingDown) return;
       historyPolling = true;

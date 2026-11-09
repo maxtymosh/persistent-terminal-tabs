@@ -2,6 +2,10 @@
 
 > Format: `- [ ] [P0|P1|P2|P3] [TASK-NNN] Action — why / relevant path (GOAL-NN)`.
 
+## Current repair
+
+- [ ] [P0] [TASK-027] Preserve Codex conversation identity and profile through reopen/restart — [task](items/task-027-codex-profile-persistence.md).
+
 ## Current mechanism — 1.4.1
 
 A shared engine resolves working, waiting, idle or unknown from the verified foreground application. Blue means working, a bell means waiting, and a filled grey circle means unknown. Green means attached and yellow detached for known idle/waiting; hollow grey means suspended. Codex native thread/project titles now resolve idle instead of remaining unknown; missing/unrecognized titles stay unknown. Process ancestry, TTY, foreground group and process birth bind evidence to the correct live application.

@@ -7,12 +7,12 @@ const fixture=String.raw`
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),Module=require('node:module');
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ptt-open-path-'));os.homedir=()=>tmp;
 const scenario=process.env.PTT_OPEN_CASE;
-const timers=[];global.setTimeout=(fn,ms)=>{timers.push({fn,ms});return 0};global.setInterval=()=>0;
+const intervals=[],bindingResolvers=[];const timers=[];global.setTimeout=(fn,ms)=>{timers.push({fn,ms});return 0};global.setInterval=fn=>{intervals.push(fn);return 0};
 const ids=Array.from({length:50},(_,i)=>'live'+String(i).padStart(4,'0')+'-chat');
 const separate=scenario==='separate-middle'||scenario==='auto-recap';
 const {StateStore,workspaceStatePath}=require('./out/state');
 new StateStore(workspaceStatePath(tmp),tmp,{groups:[{name:'Test',layout:separate?'separate':'split',sessionIds:ids}],
- sessions:Object.fromEntries(ids.map((id,i)=>[id,{title:'Task '+i,cwd:'/unmounted/ptt-test-project',agent:'codex',codexSessionId:scenario==='auto-recap'&&i===4?undefined:'thread-'+i}]))}).save();
+ sessions:Object.fromEntries(ids.map((id,i)=>[id,{title:'Task '+i,cwd:'/unmounted/ptt-test-project',agent:'codex',codexSessionId:(scenario.startsWith('profile-bind')||(scenario==='auto-recap'&&i===4))?undefined:'thread-'+i}]))}).save();
 const read=()=>StateStore.forWorkspace(tmp);
 let created=0,destroyed=0,coldProbes=0,coldLaunches=0,attaches=0,liveProbes=0,warnings=0,kills=0,closeHandler,providerCount=0,activeProviders=0,maxProviders=0;
 const providers=[],terminals=[],nativeGroups=[],handlers=new Map();const d={dispose(){}};
@@ -31,9 +31,10 @@ const vscode={extensions:{getExtension:()=>undefined},EventEmitter:class{event=(
  showInformationMessage(){},showWarningMessage:async()=>{warnings++;return 'Open all'},
  createTerminal:opts=>{created++;const id=opts.shellArgs.at(-1).replace(/^tt-/,'');const full=ids.find(x=>x.startsWith(id));assert.ok(full);const t=makeTerminal(full,900+created);t.options=opts;terminals.push(t);const parent=opts.location?.parentTerminal;if(parent){const g=nativeGroups.find(g=>g.includes(parent));assert.ok(g);g.splice(g.indexOf(parent)+1,0,t)}else nativeGroups.push([t]);return t}}};
 const originalLoad=Module._load;
-const snapshot=()=>ids.map(id=>({id:id.slice(0,8),name:'tt-'+id.slice(0,8),attached:initial.includes(id),working:false,command:'codex',agentCommand:'codex',title:'Task',status:{state:'idle',source:'test'},ramMB:1,activitySec:Date.now()/1000}));
+const snapshot=()=>ids.map(id=>({id:id.slice(0,8),name:'tt-'+id.slice(0,8),attached:initial.includes(id),working:false,command:'codex',agentCommand:'codex',agentPid:scenario.startsWith('profile-bind')?5000+ids.indexOf(id):undefined,title:'Task',status:{state:'idle',source:'test'},ramMB:1,activitySec:Date.now()/1000}));
 Module._load=function(name,...args){
  if(name==='vscode')return vscode;
+ if(name==='./codex-profile'&&scenario.startsWith('profile-bind'))return {...originalLoad.call(this,name,...args),probeCodexBindings:()=>new Promise(resolve=>bindingResolvers.push(resolve))};
  if(name==='./codex-history')return {configureCodexHistory(){},refreshCodexThreads:async()=>{},matchCodexScreen:()=>undefined};
  if(name==='./sessions')return {transcriptCwds:()=>new Map(),transcriptCwd:()=>{coldProbes++;return undefined}};
  if(name==='./tmux')return {tmuxAvailable:()=>true,applyTmuxConf(){},killSession(){kills++},listSessionsAsync:async()=>snapshot(),attachedClientSessionsAsync:async()=>clients,tmuxDiag:()=>'',
@@ -47,7 +48,15 @@ const call=(command,id)=>handlers.get('terminalTabs.'+command)(id?{kind:'tab',id
 async function flushUntil(predicate){for(let i=0;i<100&&!predicate();i++){const at=timers.findIndex(t=>t.ms===0);if(at>=0)timers.splice(at,1)[0].fn();await Promise.resolve()}assert.ok(predicate(),'fixture must finish its queued work')}
 (async()=>{try{
  const ext=require('./out/extension');await ext.activate({subscriptions:[]});timers.length=0;coldProbes=0;
- if(scenario==='attach-failed'){
+ if(scenario.startsWith('profile-bind')){
+  await intervals[0]();await flushUntil(()=>bindingResolvers.length===1);
+  if(scenario==='profile-bind-shutdown')ext.deactivate();
+  bindingResolvers.shift()(new Map([[5000,{id:'12345678-1234-1234-1234-123456789abc',home:tmp+'/custom-home'}]]));
+  for(let i=0;i<30;i++)await Promise.resolve();
+  const meta=read().meta(ids[0]);
+  if(scenario==='profile-bind-shutdown')assert.equal(meta.codexSessionId,undefined,'late observation cannot mutate after shutdown');
+  else{assert.equal(meta.codexSessionId,'12345678-1234-1234-1234-123456789abc');assert.equal(meta.codexHome,tmp+'/custom-home');assert.equal(meta.title,'Task 0');ext.deactivate()}
+ }else if(scenario==='attach-failed'){
   await call('openTab',ids[0]);const terminal=terminals[0];terminal.exitStatus={code:1,reason:2};terminals.splice(0,1);closeHandler(terminal);
   for(let i=0;i<25;i++)await Promise.resolve();
   assert.ok(read().has(ids[0]),'a failed attach must not drop its saved chat');assert.equal(kills,0);assert.ok(!timers.some(t=>t.ms===800),'failed attach is not a deliberate user close');
@@ -84,7 +93,7 @@ async function flushUntil(predicate){for(let i=0;i<100&&!predicate();i++){const 
 }finally{fs.rmSync(tmp,{recursive:true,force:true})}})().catch(e=>{console.error(e);process.exitCode=1});
 `;
 
-for(const scenario of ['live-reattach','separate-middle','split-middle','group-append','auto-recap','attach-failed']){
+for(const scenario of ['live-reattach','separate-middle','split-middle','group-append','auto-recap','attach-failed','profile-bind','profile-bind-shutdown']){
  test(`normal open path: ${scenario}`,()=>{
   const result=cp.spawnSync(process.execPath,['-e',fixture],{cwd:path.join(__dirname,'..'),env:{...process.env,PTT_OPEN_CASE:scenario},encoding:'utf8',timeout:15000});
   assert.equal(result.status,0,result.stdout+result.stderr);

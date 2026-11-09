@@ -1,3 +1,9 @@
+# 1.5.6 — Codex profile persistence
+
+- Preserve exact Codex conversation and profile identity across stale saved state, reopen and cold restore.
+- Discover separate CLI/custom homes without moving account credentials; keep existing default-home sessions compatible.
+- Report missing saved history explicitly and remove newest-conversation-by-folder fallback.
+
 # Changelog
 
 ## 1.5.5 — November 7, 2026

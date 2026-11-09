@@ -1,3 +1,4 @@
+import { findCodexRollout, codexRollout } from './codex-profile';
 import { cachedCodexThread, codexConversation } from './codex-history';
 import { generateWithFallback, ProviderOptions, RecapProvider } from './recap-providers';
 import * as fs from 'fs';
@@ -11,7 +12,6 @@ import * as path from 'path';
  */
 
 const PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
-const CODEX_DIR = path.join(os.homedir(), '.codex', 'sessions');
 const GROK_DIR = path.join(os.homedir(), '.grok', 'sessions');
 const AGY_DIR = path.join(os.homedir(), '.gemini', 'antigravity-cli');
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -27,6 +27,7 @@ export interface Recap {
   source: RecapSource;
   /** Codex's own session id, when `source === 'codex'`. */
   codexSessionId?: string;
+  codexHome?: string;
   /** Grok's own session id, when `source === 'grok'`. */
   grokSessionId?: string;
   /** Antigravity (`agy`) conversation id, when `source === 'agy'`. */
@@ -41,6 +42,7 @@ export interface RecapOptions extends ProviderOptions {
   preferCodex?: boolean;
   /** Codex rollout uuid saved after a prior exact live-process match. */
   codexSessionId?: string;
+  codexHome?: string;
   /** A tab running Grok inside a legacy Claude shell must prefer Grok over an old Claude transcript. */
   preferGrok?: boolean;
   /** Grok session uuid saved after a prior exact live-process match. */
@@ -51,29 +53,7 @@ export interface RecapOptions extends ProviderOptions {
   agySessionId?: string;
 }
 
-/** session_meta.cwd from a codex rollout's head (best-effort). The first line is session_meta but it EMBEDS the
- *  full base_instructions blob (tens of KB), so parsing the whole line from a bounded read fails — instead regex
- *  the first `"cwd":"…"` out of the head chunk; in session_meta it precedes base_instructions. */
-function codexRolloutCwd(file: string): string | undefined {
-  try {
-    const fd = fs.openSync(file, 'r');
-    try {
-      const b = Buffer.alloc(8192);
-      const n = fs.readSync(fd, b, 0, 8192, 0);
-      const head = b.subarray(0, n).toString('utf8');
-      const m = head.match(/"cwd":"((?:[^"\\]|\\.)*)"/);
-      if (!m) return undefined;
-      return JSON.parse(`"${m[1]}"`) as string; // unescape \uXXXX etc.
-    } finally { fs.closeSync(fd); }
-  } catch { return undefined; }
-}
-
-/**
- * Locate a Codex chat's rollout under ~/.codex/sessions (files are rollout-<ts>-<uuid>.jsonl). A tab whose id IS
- * a codex uuid (imported from an existing session) matches by filename. A codex chat STARTED by PTT has its own
- * uuid — `AgentSpec.newArgs` is empty for codex, the tab id is never pinned — so fall back to the NEWEST rollout
- * whose session_meta.cwd equals the tab's cwd: the latest codex convo in that folder. Best-effort by design.
- */
+/** Extract an exact provider identity; cwd and recency never identify a conversation. */
 function codexSessionId(file: string): string | undefined {
   const m = path.basename(file).match(/^rollout-[^-]+(?:-[^-]+){2}-(.+)\.jsonl$/);
   // The timestamp itself contains hyphens, so prefer a UUID-shaped suffix rather than relying on field count.
@@ -81,30 +61,8 @@ function codexSessionId(file: string): string | undefined {
   return uuid?.[1] ?? m?.[1];
 }
 
-function codexTranscriptFile(id: string, cwd?: string, knownSessionId?: string): string | undefined {
-  const found: Array<{ f: string; m: number }> = [];
-  const stack = [CODEX_DIR];
-  let scanned = 0;
-  try {
-    while (stack.length && scanned < 5000) {
-      const dir = stack.pop() as string;
-      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-        scanned++;
-        if (e.isDirectory()) stack.push(path.join(dir, e.name));
-        else if (e.name.endsWith('.jsonl')) {
-          const f = path.join(dir, e.name);
-          if (knownSessionId && e.name.includes(knownSessionId)) return f;
-          if (e.name.includes(id)) return f;
-          let m = 0; try { m = fs.statSync(f).mtimeMs; } catch { continue; }
-          found.push({ f, m });
-        }
-      }
-    }
-  } catch { return undefined; }
-  if (knownSessionId || !cwd) return undefined;
-  found.sort((a, b) => b.m - a.m);
-  for (const { f } of found.slice(0, 200)) if (codexRolloutCwd(f) === cwd) return f;
-  return undefined;
+function codexTranscriptFile(id: string, _cwd?: string, knownSessionId?: string, home?: string): string | undefined {
+  return findCodexRollout(knownSessionId ?? id, home)?.file;
 }
 
 function grokHistoryIn(dir: string): string | undefined {
@@ -197,7 +155,7 @@ export function agySessionIdFromFile(file: string): string | undefined {
 }
 
 function recapSourceOf(file: string): RecapSource {
-  if (file.includes(`${path.sep}.codex${path.sep}sessions${path.sep}`)) return 'codex';
+  if (codexRollout(file)) return 'codex';
   if (file.includes(`${path.sep}.grok${path.sep}sessions${path.sep}`)) return 'grok';
   if (file.includes(`${path.sep}antigravity-cli${path.sep}brain${path.sep}`)) return 'agy';
   return 'claude';
@@ -208,7 +166,7 @@ function recapSourceOf(file: string): RecapSource {
 export function transcriptFile(id: string, opts: RecapOptions = {}): string | undefined {
   const agy = () => agyTranscriptFile(id, opts.cwd, opts.agySessionId);
   const grok = () => grokTranscriptFile(id, opts.cwd, opts.grokSessionId);
-  const codex = () => codexTranscriptFile(id, opts.cwd, opts.codexSessionId);
+  const codex = () => codexTranscriptFile(id, opts.cwd, opts.codexSessionId, opts.codexHome);
   if (opts.preferAgy) {
     const f = agy();
     if (f) return f;
@@ -237,7 +195,7 @@ export function transcriptFile(id: string, opts: RecapOptions = {}): string | un
 
 /** mtime of a chat's transcript (0 if none) — lets callers skip re-recapping a chat that hasn't changed. */
 export function transcriptMtime(id: string, opts: RecapOptions = {}): number {
-  const thread = cachedCodexThread(opts.codexSessionId || id);
+  const thread = cachedCodexThread(opts.codexSessionId || id, opts.codexHome);
   if (opts.preferCodex && thread) return thread.updatedAt * 1000;
   const f = transcriptFile(id, opts);
   if (!f) return 0;
@@ -392,7 +350,7 @@ function summaryFallback(file: string | undefined): Recap | null {
 export async function generateRecap(id: string, opts: RecapOptions = {}): Promise<Recap | null> {
   if (opts.preferCodex || opts.codexSessionId) {
     try {
-      const { thread, messages } = await codexConversation(opts.codexSessionId || id);
+      const { thread, messages } = await codexConversation(opts.codexSessionId || id, opts.codexHome);
       const turns: string[] = [];
       for (const m of messages) takeTurn(JSON.stringify({ type: m.role, message: { content: m.text } }), turns);
       const picked = turns.length <= 16 ? turns : [turns[0], '…', ...turns.slice(-14)];

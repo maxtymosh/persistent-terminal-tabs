@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "task": "TASK-027",
+  "scope": "Exact Codex conversation/profile persistence and local recovery; public distribution excluded",
+  "reviewer": "Codex owning-session self-review for Max Tymoshyn",
+  "verdict": "Ship",
+  "baseRevision": "030777f56c5e9f679a3f2b4e3b9674031cf47b51",
+  "sourceSha256": "c58a630a2affb53a26c10c3dfa1dec416f98a1d6519531275620c9585a1a2a1f",
+  "checks": {
+    "review": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/codex-profile-verification.md",
+        "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+      }
+    },
+    "tests": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/codex-profile-verification.md",
+        "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+      }
+    },
+    "behavior": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/codex-profile-verification.md",
+        "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+      }
+    },
+    "dependencyAudit": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/codex-profile-verification.md",
+        "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+      }
+    },
+    "maps": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/codex-profile-verification.md",
+        "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+      }
+    },
+    "ownership": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/codex-profile-verification.md",
+        "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+      }
+    },
+    "acceptance": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/codex-profile-verification.md",
+        "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+      }
+    }
+  },
+  "releaseVerdict": "Ship",
+  "nativeQA": {
+    "status": "pass",
+    "evidence": {
+      "path": "docs/development/codex-profile-verification.md",
+      "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+    }
+  },
+  "releaseEvidence": {
+    "path": "docs/development/codex-profile-verification.md",
+    "sha256": "c5d8660f06ce45365d499a846b07469e1cfd5c98c40434641da65d889338dfb3"
+  }
+}

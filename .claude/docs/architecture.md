@@ -2,6 +2,14 @@
 
 > Updated: Nov 7, 2026
 
+## Codex profile persistence — 1.5.6 candidate
+
+- Persist both provider ID and absolute profile home in per-tab atomic `codex-bindings/` records, separately from the backward-compatible string ledger and workspace snapshot. New state loads overlay this exact binding after legacy links, preserving manually named tabs and layout.
+- Read modern metadata from default, CLI, environment-selected and observed/saved homes using read-only local app-server calls. Cache keys include home; duplicate names/IDs across homes remain ambiguous unless the owning home is known. No authentication files are read, copied or changed.
+- Observe already-verified foreground process owners with one bounded asynchronous descriptor probe per 30 seconds. Native SQLite descriptor paths establish custom homes; exact rollout headers establish identity where available. Modern history matches complete unique native titles. Snapshot/store/process/title checks fence late results; missing evidence retains existing binding.
+- Cold restore uses the exact home through a quoted environment assignment and resolved executable, bypassing interactive shell functions that select another account. Missing history/profile/folder produces a preserved tab with an explicit recovery message, never a new conversation or newest-by-cwd guess. Live reattach retains its attach-only fast path.
+- Capability limit: an unnamed/ambiguous modern chat without an observable rollout remains unbound until exact evidence becomes available. No heuristic chooses among candidates. Native lifecycle and actual provider observation have distinct evidence.
+
 ## Opening chats — 1.5.5
 
 - `[DECISION]` A cached-live tmux chat uses attach-session directly with a local home cwd. The running session owns its conversation/cwd; reconnecting never scans cold history, rewrites resume rc/config, or creates a replacement. A nonzero process exit from attach retains saved metadata, including with closeToDrop enabled, and refreshes live evidence. Cold restoration retains its existing behavior.

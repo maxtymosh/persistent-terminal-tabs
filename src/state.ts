@@ -1,3 +1,4 @@
+import { savedCodexBindings, saveCodexBinding } from './codex-profile';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -28,6 +29,8 @@ export interface SessionMeta {
   /** Exact Codex rollout uuid powering this PTT tab. Persisted as soon as a live Codex process is observed, not
    *  only after a recap, so an older Claude-labelled tab resumes the right Codex chat after Cmd+R. */
   codexSessionId?: string;
+  /** Exact profile which owns this conversation; never infer it from the current login. */
+  codexHome?: string;
   /** Exact Grok session uuid powering this PTT tab. Same role as `codexSessionId`: Grok typed into an older
    *  Claude-labelled shell has its own id, and we must not change `agent` or the Claude resume recipe breaks. */
   grokSessionId?: string;
@@ -99,8 +102,9 @@ function writeLinks(file: string, links: IdLinks): void {
  * host may save stale in-memory slice metadata during shutdown, but it cannot erase this recovery link. Every
  * future StateStore load merges the ledger back into the slice before any terminal can be resumed or suspended.
  */
-export function rememberCodexLink(pttId: string, codexSessionId: string): void {
+export function rememberCodexLink(pttId: string, codexSessionId: string, home?: string): void {
   if (!pttId || !codexSessionId) return;
+  if (home) saveCodexBinding(pttId, { id: codexSessionId, home });
   const links = readLinks(CODEX_LINKS_FILE);
   if (links[pttId] === codexSessionId) return;
   links[pttId] = codexSessionId;
@@ -169,6 +173,14 @@ export class StateStore {
       meta.codexSessionId = codexSessionId;
       meta.recapAgent = 'codex';
       meta.recapSessionId = codexSessionId;
+    }
+    for (const [id, binding] of Object.entries(savedCodexBindings())) {
+      const meta = this.data.sessions[id];
+      if (!meta) continue;
+      meta.codexSessionId = binding.id;
+      meta.codexHome = binding.home;
+      meta.recapAgent = 'codex';
+      meta.recapSessionId = binding.id;
     }
     for (const [id, grokSessionId] of Object.entries(readLinks(GROK_LINKS_FILE))) {
       const meta = this.data.sessions[id];
