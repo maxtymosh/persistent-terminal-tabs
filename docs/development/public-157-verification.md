@@ -54,7 +54,17 @@ Observation, not changed in this release: the project picker opens with "Browse 
 
 Frozen installer, public assets, native results and harnesses, logs and delivery receipts are retained outside the temporary checkout in the common Git artifact home for `ptt-public-157`. Public 1.5.6 remains the recovery version. Publication must use the frozen files, never regenerated `qa-artifacts` bytes. After release admission, guarded source integration and exact CI, deliver through `gh release create`, verify tag, asset digests, anonymous downloads and nested bundle checksums, then install the frozen VSIX with the VS Code CLI and compare installed modules.
 
-Scoped review verdict: **Ship**. Native affected-journey verdict: **Pass**, with the boundaries above. Release verdict for GitHub publication and desktop installation: **Ship**. Delivery results are recorded after publication.
+Scoped review verdict: **Ship**. Native affected-journey verdict: **Pass**, with the boundaries above. Release verdict for GitHub publication and desktop installation: **Ship**.
+
+## Delivery
+
+Guarded merge of PR #7 followed exact-head Quality run 43072617719. Merge commit 039be9eb34503249cec9f49c304a723bb1b5bfc1 has the same tree as the reviewed head, and main Quality run 43072971443 passed on it.
+
+GitHub: https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.7, published 2026-11-11T17:58:07Z, marked latest, tag at 039be9e. All four anonymous downloads equal the frozen files and the GitHub API digests. The downloaded bundle's checksums pass and its nested VSIX equals the native-qualified VSIX.
+
+Desktop: the VS Code CLI installed the frozen VSIX into the owner's default profile. All 27 installed files equal the package, with the manifest compared without VS Code's install metadata; the extension registry lists 1.5.7. The 44 live tmux panes present before the install were all present afterwards. Loaded version: NOT RUN. The running window keeps 1.5.6 in memory until Restart Extensions, which is left to the owner, so the production New Group journey is also NOT RUN here. Recovery, if needed: install the published 1.5.6 VSIX the same way.
+
+Result: **published and installed; production activation pending the owner's Restart Extensions.** This receipt changes documentation only; runtime and package inputs are identical to the qualified release.
 
 ## Worktree lifecycle
 

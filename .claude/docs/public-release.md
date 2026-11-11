@@ -2,12 +2,13 @@
 
 Owner: Max Tymoshyn. Explicit user choice: transfer the existing repository to maxtymosh, without creating another public repository.
 
-## 1.5.7 — qualified November 11, 2026
+## 1.5.7 — published November 11, 2026
 
 - User-authorized public update and desktop installation ("okay, publish and release that fixes"). Runtime from PR #6 / da37c73 (TASK-028): New Group no longer rejects after creating a group, and the new row is selected. Inclusion inventory and combined qualification: [public-157-verification](../../docs/development/public-157-verification.md).
 - 77 tests and required checks pass on Node 22.22.2. Frozen VSIX SHA-256: `ed6479bf2ebeabb8e2700110a815274c36f5f1eb56971360cde86f9b82e4b46e`, built from 3632ddf. Seventeen of 19 runtime modules equal public 1.5.6; the other two differ by exactly the TASK-028 change.
 - Native VS Code 1.145.2, disposable profile: the published 1.5.6 package reproduces the error when installed; the frozen 1.5.7 package, installed by the VS Code CLI, activates as 1.5.7 and passes the New Group journey with the real command and picker. Six lifecycle cases pass on its extracted modules.
-- Publication, anonymous download verification and desktop installation follow guarded merge and are recorded here afterwards. Marketplace remains authentication-blocked.
+- Published [GitHub release 1.5.7](https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.7) at 2026-11-11T17:58:07Z targeting `039be9eb34503249cec9f49c304a723bb1b5bfc1`. All four assets downloaded anonymously and matched the frozen bytes and GitHub API digests; nested VSIX and all checksums verified.
+- Installed the same frozen VSIX in Max's desktop VS Code default profile with the VS Code CLI. All 27 installed files, including 19 runtime modules, equal the package. All 44 live tmux panes present before the install remain. The window still runs 1.5.6 until Max runs Restart Extensions; loaded-version readback and the production New Group journey are NOT RUN in this record. Marketplace remains authentication-blocked.
 
 ## 1.5.6 — published November 9, 2026
 

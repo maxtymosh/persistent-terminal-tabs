@@ -5,55 +5,55 @@
   "reviewer": "Claude owning-session self-review for Max Tymoshyn",
   "verdict": "Ship",
   "baseRevision": "da37c737d4f785637f2f2c99e441c1736ce37833",
-  "sourceSha256": "025d788e0a80da38a574ce4d584dd4e6cd3bea481fda41c3c2a65b9621f01dda",
+  "sourceSha256": "a368be7c155d474d6cbd05d168460d217d2a92c7b3c1f254390223e9dbd97750",
   "checks": {
     "review": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-157-verification.md",
-        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+        "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
       }
     },
     "tests": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-157-verification.md",
-        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+        "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
       }
     },
     "behavior": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-157-verification.md",
-        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+        "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
       }
     },
     "dependencyAudit": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-157-verification.md",
-        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+        "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
       }
     },
     "maps": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-157-verification.md",
-        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+        "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
       }
     },
     "ownership": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-157-verification.md",
-        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+        "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
       }
     },
     "acceptance": {
       "status": "pass",
       "evidence": {
         "path": "docs/development/public-157-verification.md",
-        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+        "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
       }
     }
   },
@@ -62,11 +62,11 @@
     "status": "pass",
     "evidence": {
       "path": "docs/development/public-157-verification.md",
-      "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
     }
   },
   "releaseEvidence": {
     "path": "docs/development/public-157-verification.md",
-    "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+    "sha256": "0c5d4dc82344643d64267df931e0feed885dff6135274f49dbb383f941b8eb99"
   }
 }
