@@ -1,5 +1,12 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 11, 2026 — 1.5.7 release qualification
+
+- Max authorized publishing and releasing the merged New Group fix. Reserved 1.5.7: manifest, lockfile, shipped changelog entry, README and install-prompt filenames, release notes.
+- Froze the VSIX from 3632ddf (SHA-256 `ed6479bf…`). Seventeen of 19 modules equal public 1.5.6; `tree.js` and `extension.js` differ by exactly the TASK-028 hunks.
+- Native VS Code 1.145.2 in disposable profiles: published 1.5.6 installed by the CLI reproduces the rejection through the real command and picker; frozen 1.5.7 installed the same way resolves, selects the new row and leaves the open command alone. The unchanged six-case lifecycle harness passes on the frozen modules.
+- Noted, not changed: the project picker opens with "Browse for a folder…" highlighted, so Enter opens the folder dialog first.
+
 ## Nov 11, 2026 — New Group error toast
 
 - Max reported Claude not starting inside a PTT folder, with a `terminalTabs.newGroup` error toast in the screenshots. The hang was not PTT: the folder lives on Google Drive, macOS had evicted the instruction files Claude reads at startup, and the system file-provider daemon had stopped serving downloads. Restarting that daemon restored it.
