@@ -1,3 +1,9 @@
+# 1.5.7 — New Group error fix
+
+- New Group no longer shows `Error running command terminalTabs.newGroup` after the group is created. The defect dated from 1.3.0; groups were saved correctly throughout.
+- The new group's row is selected in the Sessions view after creation.
+- If the row cannot be selected, the reason is logged and the group is still created.
+
 # 1.5.6 — Codex profile persistence
 
 - Preserve exact Codex conversation and profile identity across stale saved state, reopen and cold restore.
