@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "task": "public-extension-release-1.5.7",
+  "scope": "Combined public GitHub release 1.5.7 and installation of the same frozen VSIX in the owner's desktop VS Code; no Marketplace",
+  "reviewer": "Claude owning-session self-review for Max Tymoshyn",
+  "verdict": "Ship",
+  "baseRevision": "da37c737d4f785637f2f2c99e441c1736ce37833",
+  "sourceSha256": "025d788e0a80da38a574ce4d584dd4e6cd3bea481fda41c3c2a65b9621f01dda",
+  "checks": {
+    "review": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/public-157-verification.md",
+        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      }
+    },
+    "tests": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/public-157-verification.md",
+        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      }
+    },
+    "behavior": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/public-157-verification.md",
+        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      }
+    },
+    "dependencyAudit": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/public-157-verification.md",
+        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      }
+    },
+    "maps": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/public-157-verification.md",
+        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      }
+    },
+    "ownership": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/public-157-verification.md",
+        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      }
+    },
+    "acceptance": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/public-157-verification.md",
+        "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+      }
+    }
+  },
+  "releaseVerdict": "Ship",
+  "nativeQA": {
+    "status": "pass",
+    "evidence": {
+      "path": "docs/development/public-157-verification.md",
+      "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+    }
+  },
+  "releaseEvidence": {
+    "path": "docs/development/public-157-verification.md",
+    "sha256": "1a71d997233f113d1b200b44ed23d396aafaba88264f42fa862e5389da6395b0"
+  }
+}
