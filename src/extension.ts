@@ -662,8 +662,14 @@ async function newGroup(): Promise<void> {
   store.save();
   tree?.refresh();
   tree?.setActiveGroup(name);
-  await view?.reveal({ kind: 'group', name }, { select: true, focus: true });
   log(`＋ group "${name}" after 📥 New → ${project.cwd}`);
+  // The group is saved and marked active above; revealing its row is a courtesy. A view that cannot reveal
+  // must not surface as "Error running command terminalTabs.newGroup" for a group that was created.
+  try {
+    await view?.reveal({ kind: 'group', name }, { select: true, focus: true });
+  } catch (e) {
+    log(`⚠ could not reveal group "${name}": ${e instanceof Error ? e.message : String(e)}`);
+  }
 }
 
 /**

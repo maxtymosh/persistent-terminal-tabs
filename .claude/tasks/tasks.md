@@ -66,6 +66,8 @@ detached → 🟡 · else ⚪ outline.
 
 ## Now
 
+- [x] [P2] [TASK-028] [Stop the New Group error toast](items/task-028-new-group-reveal.md) — the tree provider lacked `getParent`, so reveal rejected after the group was saved. Fixed in source with a reveal-contract regression and a native VS Code check. Not in a released VSIX yet; installed 1.5.6 still shows the toast.
+
 - [x] [P1] [TASK-026] [Adapt the updated CI/CD stage bundle](items/task-026-ci-cd-stage-bundle.md) — separate PR/merge/delivery/release completion; explicit no-staging transitions; combined release inventory and preserved gates.
 
 

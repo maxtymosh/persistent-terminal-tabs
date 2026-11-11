@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "task": "TASK-028",
+  "scope": "New Group reveal: TabsTree.getParent for the flat tree and best-effort reveal after group creation; no version, package or release",
+  "reviewer": "Claude owning-session self-review for Max Tymoshyn",
+  "verdict": "Ship",
+  "baseRevision": "d306862f07652e2eedb5fb3fd26071470cb0b071",
+  "sourceSha256": "4c6d148e020970056f83e0fb47c5d12c6fb30b5d97239133121ca13c2d68c518",
+  "checks": {
+    "review": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/new-group-reveal-verification.md",
+        "sha256": "eb2817f49897b90925abdd262ef2b8dfb0454b4b0688cf81857ba514e5250c9e"
+      }
+    },
+    "tests": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/new-group-reveal-verification.md",
+        "sha256": "eb2817f49897b90925abdd262ef2b8dfb0454b4b0688cf81857ba514e5250c9e"
+      }
+    },
+    "behavior": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/new-group-reveal-verification.md",
+        "sha256": "eb2817f49897b90925abdd262ef2b8dfb0454b4b0688cf81857ba514e5250c9e"
+      }
+    },
+    "dependencyAudit": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/new-group-reveal-verification.md",
+        "sha256": "eb2817f49897b90925abdd262ef2b8dfb0454b4b0688cf81857ba514e5250c9e"
+      }
+    },
+    "maps": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/new-group-reveal-verification.md",
+        "sha256": "eb2817f49897b90925abdd262ef2b8dfb0454b4b0688cf81857ba514e5250c9e"
+      }
+    },
+    "ownership": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/new-group-reveal-verification.md",
+        "sha256": "eb2817f49897b90925abdd262ef2b8dfb0454b4b0688cf81857ba514e5250c9e"
+      }
+    },
+    "acceptance": {
+      "status": "pass",
+      "evidence": {
+        "path": "docs/development/new-group-reveal-verification.md",
+        "sha256": "eb2817f49897b90925abdd262ef2b8dfb0454b4b0688cf81857ba514e5250c9e"
+      }
+    }
+  },
+  "releaseVerdict": "Hold"
+}

@@ -1,6 +1,13 @@
 # Persistent Terminal Tabs — architecture decisions
 
-> Updated: Nov 7, 2026
+> Updated: Nov 11, 2026
+
+## Tree view reveal contract — TASK-028
+
+- The Sessions tree is flat: group headers and chats are top-level siblings. `TabsTree.getParent()` therefore returns `undefined` for every row. It must exist anyway, because VS Code rejects `TreeView.reveal()` when the registered provider has no `getParent`.
+- Rows keep stable `TreeItem.id` values (`group:{name}`, `tab:{id}`). That is what lets `reveal()` resolve a freshly built node object to the row the view already shows; do not drop or reformat those ids without rechecking reveal.
+- Revealing a row after a state change is a courtesy. Save and log the state change first, then reveal inside a guard that logs a failure. A reveal error must never be reported as the failure of the command that already succeeded.
+- Tree-view test doubles must enforce the reveal contract (reject without `getParent`, resolve by parent chain and item id). A double whose `reveal()` always succeeds let this defect ship in 1.3.0 through 1.5.6.
 
 ## Codex profile persistence — 1.5.6 candidate
 
