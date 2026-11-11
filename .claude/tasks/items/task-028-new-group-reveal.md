@@ -29,7 +29,7 @@ The toast is a PTT defect and is this task. `New Group` saved the group, then `v
 
 ## Release handoff
 
-Installed and public 1.5.6 still show the toast until a later release carries this fix. That release must use a new version number; the CI candidate built from this source still reports 1.5.6 and is not installable as a replacement. Suggested release note: "New Group no longer ends in an error toast; the new group's row is selected." Native journey for the release: create a group from the panel toolbar and confirm no toast and a selected row.
+Released in 1.5.7 on November 11, 2026: [GitHub release](https://github.com/maxtymosh/persistent-terminal-tabs/releases/tag/v1.5.7), qualification and delivery in `docs/development/public-157-verification.md`. The frozen 1.5.7 package, installed into a disposable profile, passed the New Group journey through the real command and project picker. The same package is installed in Max's desktop VS Code; it loads after Restart Extensions. Confirming no toast in his own window after that restart is the one remaining acceptance step.
 
 ## Worktrees
 

@@ -1,5 +1,10 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 11, 2026 — 1.5.7 published and installed
+
+- PR #7 merged through the guard as 039be9e; main Quality passed. Published GitHub release v1.5.7 with the four frozen assets. Anonymous downloads, API digests, bundle checksums and the nested VSIX all match the native-qualified files.
+- Installed the frozen VSIX in Max's desktop VS Code with the CLI: all 27 installed files equal the package and all 44 live tmux panes remain. The running window keeps 1.5.6 until he runs Restart Extensions; loaded version and the production journey are not claimed.
+
 ## Nov 11, 2026 — 1.5.7 release qualification
 
 - Max authorized publishing and releasing the merged New Group fix. Reserved 1.5.7: manifest, lockfile, shipped changelog entry, README and install-prompt filenames, release notes.
