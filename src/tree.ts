@@ -101,6 +101,14 @@ export class TabsTree
     return rows;
   }
 
+  /**
+   * Flat tree: every row is top-level, so nothing has a parent. The method must still exist — VS Code rejects
+   * `TreeView.reveal()` with "Required registered TreeDataProvider to implement 'getParent'" when it is missing.
+   */
+  getParent(): undefined {
+    return undefined;
+  }
+
   getTreeItem(node: Node): vscode.TreeItem {
     if (node.kind === 'group') {
       const g = this.store.groups.find((x) => x.name === node.name);

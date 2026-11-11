@@ -1,5 +1,11 @@
 # Daily changelog — Persistent Terminal Tabs
 
+## Nov 11, 2026 — New Group error toast
+
+- Max reported Claude not starting inside a PTT folder, with a `terminalTabs.newGroup` error toast in the screenshots. The hang was not PTT: the folder lives on Google Drive, macOS had evicted the instruction files Claude reads at startup, and the system file-provider daemon had stopped serving downloads. Restarting that daemon restored it.
+- The toast was a real defect, present since 1.3.0: `TabsTree` had no `getParent`, so `view.reveal()` rejected after the group was already saved. Added `getParent` for the flat tree and made the reveal best-effort after the creation is logged (TASK-028).
+- New regression enforces VS Code's reveal contract and failed on the previous source with the reported message. 77 tests pass. Native VS Code 1.145.2 reproduced the rejection on the shipped 1.5.6 runtime and showed the fixed build resolving with the new row selected. Source only; no version bump, package or install.
+
 ## Nov 7, 2026 — live status recovery follow-up
 
 - 1.5.3 was verified loaded, but Max reported persistent lag and grey/color flicker. Removed the remaining blocking startup/diagnostic/status consumers and client adoption. History metadata no longer gates panel startup; automatic legacy fd discovery is removed from startup as well as ticks.
